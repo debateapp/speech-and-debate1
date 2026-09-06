@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Athens Debate - Dashboard</title>
+  <style>
+    :root {
+      --bg-color: #237C85;
+      --text-color: #FFFFFF;
+      --input-bg: rgba(255, 255, 255, 0.15);
+      --input-border: rgba(255, 255, 255, 0.4);
+      --button-bg: #FFFFFF;
+      --button-text: #237C85;
+      --card-bg: rgba(0, 0, 0, 0.12);
+      --record-red: #ff3b30;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Logo Styling */
+    .logo-wrapper {
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .logo-svg {
+      width: 110px;
+      height: 110px;
+    }
+
+    .logo-text {
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: 8px;
+      margin-top: 12px;
+      margin-right: -8px;
+      text-transform: uppercase;
+    }
+
+    /* Views Framework */
+    .view {
+      width: 100%;
+      display: none;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    /* Form Controls */
+    .form-group {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      opacity: 0.9;
+    }
+
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      color: var(--text-color);
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    select option {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    input:focus, select:focus {
+      border-color: var(--text-color);
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--button-bg);
+      color: var(--button-text);
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--text-color);
+      color: var(--text-color);
+    }
+
+    .btn-action {
+      background-color: #00d26a;
+      color: #ffffff;
+    }
+
+    .error-msg {
+      color: var(--record-red);
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    /* Panels & Containers */
+    .welcome-text {
+      font-size: 26px;
+      font-weight: 400;
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+
+    .panel {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid var(--input-border);
+      margin-top: 15px;
+    }
+
+    .panel-title {
+      font-size: 20px;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    .prompt-list {
+      margin: 20px 0;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .prompt-item {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--input-border);
+      padding: 14px;
+      border-radius: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .prompt-item:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .prompt-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-top: 3px;
+      cursor: pointer;
+      accent-color: var(--bg-color);
+    }
+
+    .prompt-item label {
+      text-transform: none;
+      letter-spacing: normal;
+      font-size: 15px;
+      line-height: 1.4;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    /* Timers & Speech Views */
+    .selected-prompt-box {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid var(--input-border);
+      padding: 18px;
+      border-radius: 8px;
+      font-size: 17px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+
+    .timer-display {
+      font-size: 64px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      margin: 15px 0;
+    }
+
+    .timer-controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    .timer-status {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--record-red);
+      margin-top: 15px;
+      display: none;
+      letter-spacing: 1px;
+    }
+
+    /* Speech Recording & Transcript */
+    .rec-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 10px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .rec-indicator.active {
+      opacity: 1;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      background-color: var(--record-red);
+      border-radius: 50%;
+      animation: pulse 1s infinite alternate;
+    }
+
+    .transcript-box {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--input-border);
+      padding: 16px;
+      border-radius: 8px;
+      text-align: left;
+      font-size: 15px;
+      line-height: 1.6;
+      max-height: 180px;
+      overflow-y: auto;
+      margin-top: 15px;
+      display: none;
+      word-wrap: break-word;
+    }
+
+    @keyframes pulse {
+      from { opacity: 0.3; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="logo-wrapper">
+      <svg class="logo-svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 100 22 C 109 22 113 28 122 30 C 131 32 138 27 146 32 C 154 37 157 45 163 52 C 169 59 177 62 180 71 C 183 80 178 88 178 98 C 178 108 183 116 180 125 C 177 134 169 137 163 144 C 157 151 154 159 146 164 C 138 169 131 164 122 166 C 113 168 109 174 100 174 C 91 174 87 168 78 166 C 69 164 62 169 54 164 C 46 159 43 151 37 144 C 31 137 23 134 20 125 C 17 116 22 108 22 98 C 22 88 17 80 20 71 C 23 62 31 59 37 52 C 43 45 46 37 54 32 C 62 27 69 32 78 30 C 87 28 91 22 100 22 Z" stroke="white" stroke-width="4.5" fill="none"/>
+        <path d="M 100 32 C 107 32 111 37 118 39 C 125 41 131 37 137 41 C 143 45 146 51 151 57 C 156 63 162 65 165 72 C 168 79 164 86 164 94 C 164 102 168 109 165 116 C 162 123 156 125 151 131 C 146 137 143 143 137 147 C 131 151 125 147 118 149 C 111 151 107 156 100 156 C 93 156 89 151 82 149 C 75 147 69 151 63 147 C 57 143 54 137 49 131 C 44 125 38 123 35 116 C 32 109 36 102 36 94 C 36 86 32 79 35 72 C 38 65 44 63 49 57 C 54 51 57 45 63 41 C 69 37 75 41 82 39 C 89 37 93 32 100 32 Z" stroke="white" stroke-width="4.5" fill="none"/>
+        <text x="100" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="62" font-weight="bold" fill="white" text-anchor="middle">A</text>
+      </svg>
+      <div class="logo-text">ATHENS DEBATE</div>
+    </div>
+
+    <div id="loginView" class="view active">
+      <div id="errorMsg" class="error-msg">Invalid email or password.</div>
+      <form onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="Start typing your username here..." required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Start typing your password here..." required>
+        </div>
+        <button type="submit" class="btn">LOG IN</button>
+      </form>
+    </div>
+
+    <div id="welcomeView" class="view">
+      <h1 class="welcome-text">Welcome Varun Krishnaswamy</h1>
+      <button class="btn" onclick="showView('generatorView')">IMPROMPTU</button>
+    </div>
+
+    <div id="generatorView" class="view">
+      <div class="panel">
+        <h2 class="panel-title">Impromptu Generator</h2>
+        
+        <div class="form-group">
+          <label for="schoolLevel">School Level</label>
+          <select id="schoolLevel">
+            <option value="MS" selected>Middle School</option>
+            <option value="HS">High School</option>
+            <option value="Open">Open / Novice</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="numPrompts">Number of Prompts (Max 10)</label>
+          <input type="number" id="numPrompts" min="1" max="10" value="3">
+        </div>
+
+        <button class="btn" onclick="generatePrompts()">GENERATE PROMPTS</button>
+
+        <div id="promptContainer" class="prompt-list"></div>
+
+        <button id="selectBtn" class="btn" style="display: none;" onclick="startPrep()">SELECT & START PREP</button>
+      </div>
+    </div>
+
+    <div id="prepTimerView" class="view">
+      <div class="panel">
+        <h2 class="panel-title">Prep Time</h2>
+        <div class="selected-prompt-box activePromptDisplay"></div>
+
+        <div class="timer-display" id="prepTimerDisplay">02:00</div>
+        <div id="prepTimesUp" class="timer-status">TIME'S UP!</div>
+
+        <div class="timer-controls">
+          <button class="btn" onclick="startPrepTimer()">Start</button>
+          <button class="btn btn-secondary" onclick="pausePrepTimer()">Pause</button>
+          <button class="btn btn-secondary" onclick="resetPrepTimer()">Reset</button>
+        </div>
+
+        <button class="btn btn-action" style="margin-top: 15px;" onclick="goToSpeechView()">START SPEECH (5 MIN)</button>
+        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="showView('generatorView')">← Back to Generator</button>
+      </div>
+    </div>
+
+    <div id="speechTimerView" class="view">
+      <div class="panel">
+        <h2 class="panel-title">Speech Time</h2>
+        <div class="selected-prompt-box activePromptDisplay"></div>
+
+        <div class="timer-display" id="speechTimerDisplay">05:00</div>
+        <div id="speechTimesUp" class="timer-status">TIME'S UP!</div>
+
+        <div class="rec-indicator" id="recIndicator">
+          <div class="dot"></div> Recording Live
+        </div>
+
+        <div class="timer-controls" style="margin-top: 10px;">
+          <button class="btn" onclick="startSpeechTimer()">Start</button>
+          <button class="btn btn-secondary" onclick="pauseSpeechTimer()">Pause</button>
+          <button class="btn btn-secondary" onclick="resetSpeechTimer()">Reset</button>
+        </div>
+
+        <div class="transcript-box" id="transcriptBox">
+          <label style="opacity: 0.7; margin-bottom: 8px;">Speech Transcript:</label>
+          <div id="transcriptText">Listening for speech...</div>
+        </div>
+
+        <button class="btn btn-secondary" style="margin-top: 20px;" onclick="showView('prepTimerView')">← Back to Prep</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Topic Bank (~100 items)
+    const topicBank = [
+      "Couch",
+      "Chair",
+      "Spoon",
+      "Mirror",
+      "Clock",
+      "Pillow",
+      "Umbrella",
+      "Candle",
+      "Ladder",
+      "Blanket",
+      "Broom",
+      "Key",
+      "Lamp",
+      "Drawer",
+      "Curtain",
+      "Bucket",
+      "Kettle",
+      "Basket",
+      "Doorknob",
+      "Sponge",
+      "Hammer",
+      "Scissors",
+      "Compass",
+      "Magnet",
+      "Flashlight",
+      "Wrench",
+      "Anchor",
+      "Telescope",
+      "Whistle",
+      "Battery",
+      "Camera",
+      "Rope",
+      "Needle",
+      "Padlock",
+      "Fan",
+      "Mountain",
+      "River",
+      "Cloud",
+      "Seashell",
+      "Feather",
+      "Acorn",
+      "Cactus",
+      "Volcano",
+      "Iceberg",
+      "Pebble",
+      "Thunder",
+      "Forest",
+      "Desert",
+      "Rainbow",
+      "Puddle",
+      "Bread",
+      "Lemon",
+      "Pepper",
+      "Honey",
+      "Pretzel",
+      "Pickle",
+      "Toast",
+      "Onion",
+      "Marshmallow",
+      "Chopsticks",
+      "Owl",
+      "Octopus",
+      "Turtle",
+      "Bee",
+      "Penguin",
+      "Chameleon",
+      "Elephant",
+      "Spider",
+      "Peacock",
+      "Snail",
+      "Bridge",
+      "Lighthouse",
+      "Attic",
+      "Elevator",
+      "Tunnel",
+      "Fence",
+      "Balcony",
+      "Staircase",
+      "Windmill",
+      "Crossroads",
+      "Hat",
+      "Glove",
+      "Scarf",
+      "Boot",
+      "Button",
+      "Zipper",
+      "Necktie",
+      "Sock",
+      "Belt",
+      "Sunglasses",
+      "Balloon",
+      "Puzzle",
+      "Marble",
+      "Domino",
+      "Kite",
+      "Coin",
+      "Map",
+      "Stamp",
+      "Dice",
+      "Mask",
+      "Run",
+      "Whisper",
+      "Climb",
+      "Forgive",
+      "Wander",
+      "Build",
+      "Break",
+      "Dream",
+      "Stumble",
+      "Leap",
+      "Listen",
+      "Chase",
+      "Surrender",
+      "Ignite",
+      "Balance",
+      "Wait",
+      "Grow",
+      "Vanish",
+      "Pretend",
+      "Begin",
+      "Dance",
+      "Fall",
+      "Escape",
+      "Remember",
+      "Hesitate",
+      "Bloom",
+      "Wrestle",
+      "Drift",
+      "Rebuild",
+      "Shine",
+      "Curiosity killed the cat.",
+      "Don't dance while carrying eggs in your basket.",
+      "The early bird catches the worm.",
+      "Don't count your chickens before they hatch.",
+      "A rolling stone gathers no moss.",
+      "When it rains, it pours.",
+      "The grass is always greener on the other side.",
+      "Actions speak louder than words.",
+      "Don't bite the hand that feeds you.",
+      "Every cloud has a silver lining.",
+      "You can't have your cake and eat it too.",
+      "A picture is worth a thousand words.",
+      "Barking up the wrong tree.",
+      "Don't put all your eggs in one basket.",
+      "Too many cooks spoil the broth.",
+      "The pen is mightier than the sword.",
+      "Bite off more than you can chew.",
+      "Let sleeping dogs lie.",
+      "Kill two birds with one stone.",
+      "Burning the candle at both ends.",
+      "A stitch in time saves nine.",
+      "Don't judge a book by its cover.",
+      "The apple doesn't fall far from the tree.",
+      "Still waters run deep.",
+      "Beggars can't be choosers.",
+      "Fortune favors the bold.",
+      "Practice makes perfect.",
+      "Honesty is the best policy.",
+      "Better late than never.",
+      "Look before you leap.",
+      "Necessity is the mother of invention.",
+      "When in Rome, do as the Romans do.",
+      "The squeaky wheel gets the grease.",
+      "Don't cry over spilled milk.",
+      "Birds of a feather flock together.",
+      "You reap what you sow.",
+      "Rome wasn't built in a day.",
+      "A watched pot never boils.",
+      "Two wrongs don't make a right.",
+      "The whole is greater than the sum of its parts.",
+      "Be the change you wish to see in the world.",
+      "Fall seven times, stand up eight.",
+      "In the middle of difficulty lies opportunity.",
+      "Not all those who wander are lost.",
+      "The only true wisdom is knowing you know nothing.",
+      "What doesn't kill you makes you stronger.",
+      "A journey of a thousand miles begins with a single step.",
+      "The unexamined life is not worth living.",
+      "We are what we repeatedly do.",
+      "Turn your wounds into wisdom.",
+      "Whether you think you can or you can't, you're right.",
+      "The best way to predict the future is to create it.",
+      "It always seems impossible until it's done.",
+      "Do one thing every day that scares you.",
+      "The mind is everything; what you think you become.",
+      "Life is what happens when you're busy making other plans.",
+      "Courage is grace under pressure.",
+      "The obstacle is the way.",
+      "Silence is a source of great strength.",
+      "Waste no more time arguing what a good person should be. Be one.",
+      "Happiness depends upon ourselves.",
+      "He who has a why can bear almost any how.",
+      "Simplicity is the ultimate sophistication.",
+      "The only impossible journey is the one you never begin.",
+      "Well done is better than well said.",
+      "The future belongs to those who believe in their dreams.",
+      "Change your thoughts and you change your world.",
+      "A smooth sea never made a skilled sailor.",
+      "The harder the conflict, the greater the triumph.",
+      "Stars can't shine without darkness.",
+      "Doubt kills more dreams than failure ever will.",
+      "Great things never came from comfort zones.",
+      "Every expert was once a beginner.",
+      "Energy and persistence conquer all things.",
+      "The secret of getting ahead is getting started.",
+      "Speak the truth even if your voice shakes.",
+      "Bloom where you are planted.",
+      "You miss every shot you don't take.",
+      "The tongue has no bones but is strong enough to break a heart.",
+      "A ship in harbor is safe, but that's not what ships are built for.",
+      "Comparison is the thief of joy.",
+      "Luck is what happens when preparation meets opportunity.",
+      "The best time to plant a tree was twenty years ago.",
+      "If you want to go fast, go alone; if you want to go far, go together.",
+      "Don't let perfect be the enemy of good.",
+      "A goal without a plan is just a wish.",
+      "Smooth roads never make good drivers.",
+      "Character is what you do when no one is watching.",
+      "The flower that blooms in adversity is the rarest of all.",
+      "You can't cross the sea merely by standing and staring at the water.",
+      "Water the plants you want to grow.",
+      "Even the longest night ends with sunrise.",
+      "A candle loses nothing by lighting another candle.",
+      "The river cuts through rock not by power but persistence.",
+      "Don't wait for the storm to pass; learn to dance in the rain.",
+      "The bamboo that bends is stronger than the oak that resists.",
+      "A diamond is a chunk of coal that did well under pressure.",
+      "You cannot pour from an empty cup.",
+      "Where there's a will, there's a way."
+    ];
+
+    let selectedPrompt = "";
+    
+    // Prep Timer (2 Min)
+    let prepSeconds = 120;
+    let prepInterval = null;
+
+    // Speech Timer (5 Min)
+    let speechSeconds = 300;
+    let speechInterval = null;
+
+    // Speech Recognition & Audio
+    let recognition = null;
+    let audioCtx = null;
+    let transcriptText = "";
+
+    // Navigation
+    function showView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active');
+    }
+
+    // Login
+    function handleLogin(event) {
+      event.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const errorMsg = document.getElementById('errorMsg');
+
+      if (email === 'vathukrishnaswamy@gmail.com' && password === '11athensvk') {
+        errorMsg.style.display = 'none';
+        showView('welcomeView');
+      } else {
+        errorMsg.style.display = 'block';
+      }
+    }
+
+    // Generator
+    function generatePrompts() {
+      const container = document.getElementById('promptContainer');
+      const selectBtn = document.getElementById('selectBtn');
+      let count = parseInt(document.getElementById('numPrompts').value);
+
+      if (isNaN(count) || count < 1) count = 1;
+      if (count > 10) count = 10;
+      document.getElementById('numPrompts').value = count;
+
+      container.innerHTML = '';
+      selectBtn.style.display = 'none';
+      selectedPrompt = '';
+
+      const shuffled = [...topicBank].sort(() => 0.5 - Math.random());
+      const selectedTopics = shuffled.slice(0, count);
+
+      selectedTopics.forEach((topic, idx) => {
+        const item = document.createElement('div');
+        item.className = 'prompt-item';
+        item.onclick = (e) => {
+          if(e.target.tagName !== 'INPUT') {
+            const cb = item.querySelector('input');
+            cb.checked = !cb.checked;
+            handleCheckboxSelect(cb);
+          }
+        };
+
+        item.innerHTML = `
+          <input type="checkbox" id="p_${idx}" name="prompt_choice" value="${escapeHtml(topic)}" onchange="handleCheckboxSelect(this)">
+          <label for="p_${idx}">${topic}</label>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function handleCheckboxSelect(current) {
+      const checkboxes = document.querySelectorAll('input[name="prompt_choice"]');
+      checkboxes.forEach(cb => {
+        if (cb !== current) cb.checked = false;
+      });
+
+      const selectBtn = document.getElementById('selectBtn');
+      if (current.checked) {
+        selectedPrompt = current.value;
+        selectBtn.style.display = 'block';
+      } else {
+        selectedPrompt = '';
+        selectBtn.style.display = 'none';
+      }
+    }
+
+    // Start Prep
+    function startPrep() {
+      if (!selectedPrompt) return;
+      document.querySelectorAll('.activePromptDisplay').forEach(el => {
+        el.innerText = `"${selectedPrompt}"`;
+      });
+      resetPrepTimer();
+      showView('prepTimerView');
+    }
+
+    // 2-MIN PREP TIMER LOGIC
+    function updatePrepDisplay() {
+      const mins = Math.floor(prepSeconds / 60).toString().padStart(2, '0');
+      const secs = (prepSeconds % 60).toString().padStart(2, '0');
+      document.getElementById('prepTimerDisplay').innerText = `${mins}:${secs}`;
+    }
+
+    function startPrepTimer() {
+      if (prepInterval) return;
+      document.getElementById('prepTimesUp').style.display = 'none';
+      prepInterval = setInterval(() => {
+        if (prepSeconds > 0) {
+          prepSeconds--;
+          updatePrepDisplay();
+        } else {
+          pausePrepTimer();
+          document.getElementById('prepTimesUp').style.display = 'block';
+          playBellSound();
+        }
+      }, 1000);
+    }
+
+    function pausePrepTimer() {
+      if (prepInterval) {
+        clearInterval(prepInterval);
+        prepInterval = null;
+      }
+    }
+
+    function resetPrepTimer() {
+      pausePrepTimer();
+      prepSeconds = 120;
+      updatePrepDisplay();
+      document.getElementById('prepTimesUp').style.display = 'none';
+    }
+
+    // Transition Prep -> Speech
+    function goToSpeechView() {
+      pausePrepTimer();
+      resetSpeechTimer();
+      showView('speechTimerView');
+    }
+
+    // 5-MIN SPEECH TIMER & RECORDING LOGIC
+    function updateSpeechDisplay() {
+      const mins = Math.floor(speechSeconds / 60).toString().padStart(2, '0');
+      const secs = (speechSeconds % 60).toString().padStart(2, '0');
+      document.getElementById('speechTimerDisplay').innerText = `${mins}:${secs}`;
+    }
+
+    function startSpeechTimer() {
+      if (speechInterval) return;
+      document.getElementById('speechTimesUp').style.display = 'none';
+      startRecording();
+
+      speechInterval = setInterval(() => {
+        if (speechSeconds > 0) {
+          speechSeconds--;
+          updateSpeechDisplay();
+        } else {
+          pauseSpeechTimer();
+          document.getElementById('speechTimesUp').style.display = 'block';
+          playBellSound();
+        }
+      }, 1000);
+    }
+
+    function pauseSpeechTimer() {
+      if (speechInterval) {
+        clearInterval(speechInterval);
+        speechInterval = null;
+      }
+      stopRecording();
+    }
+
+    function resetSpeechTimer() {
+      pauseSpeechTimer();
+      speechSeconds = 300;
+      updateSpeechDisplay();
+      document.getElementById('speechTimesUp').style.display = 'none';
+      document.getElementById('transcriptBox').style.display = 'none';
+      document.getElementById('transcriptText').innerText = "Listening for speech...";
+      transcriptText = "";
+    }
+
+    // Web Speech API Integration for Recording & Transcription
+    function startRecording() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      document.getElementById('recIndicator').classList.add('active');
+      document.getElementById('transcriptBox').style.display = 'block';
+
+      if (!SpeechRecognition) {
+        document.getElementById('transcriptText').innerText = "Browser doesn't support live Speech-to-Text transcription. (Timer active)";
+        return;
+      }
+
+      if (!recognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        recognition.onresult = (event) => {
+          let currentTranscript = "";
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            currentTranscript += event.results[i][0].transcript;
+          }
+          document.getElementById('transcriptText').innerText = currentTranscript || transcriptText || "Listening for speech...";
+        };
+
+        recognition.onerror = (e) => {
+          console.log("Speech Recognition Error:", e);
+        };
+      }
+
+      try {
+        recognition.start();
+      } catch (err) {
+        // Recognition already active
+      }
+    }
+
+    function stopRecording() {
+      document.getElementById('recIndicator').classList.remove('active');
+      if (recognition) {
+        try {
+          recognition.stop();
+        } catch (err) {}
+      }
+    }
+
+    // Bell Sound Synthesizer
+    function playBellSound() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 1.5);
+
+        gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 1.5);
+      } catch (e) {
+        console.log("Audio alert error:", e);
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>
