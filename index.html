@@ -1,914 +1,859 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Athens Debate - Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudentVUE Gradebook</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & React DOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <!-- Babel Compiler for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Google Fonts & Material Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <style>
-    :root {
-      --bg-color: #237C85;
-      --text-color: #FFFFFF;
-      --input-bg: rgba(255, 255, 255, 0.15);
-      --input-border: rgba(255, 255, 255, 0.4);
-      --button-bg: #FFFFFF;
-      --button-text: #237C85;
-      --card-bg: rgba(0, 0, 0, 0.12);
-      --record-red: #ff3b30;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
     body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 520px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    /* Logo Styling */
-    .logo-wrapper {
-      margin-bottom: 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .logo-svg {
-      width: 110px;
-      height: 110px;
-    }
-
-    .logo-text {
-      font-size: 22px;
-      font-weight: 500;
-      letter-spacing: 8px;
-      margin-top: 12px;
-      margin-right: -8px;
-      text-transform: uppercase;
-    }
-
-    /* Views Framework */
-    .view {
-      width: 100%;
-      display: none;
-      animation: fadeIn 0.4s ease-in-out;
-    }
-
-    .view.active {
-      display: block;
-    }
-
-    /* Form Controls */
-    .form-group {
-      margin-bottom: 18px;
-      text-align: left;
-    }
-
-    label {
-      display: block;
-      font-size: 13px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-      opacity: 0.9;
-    }
-
-    input[type="email"],
-    input[type="password"],
-    input[type="number"],
-    select {
-      width: 100%;
-      padding: 12px 16px;
-      background: var(--input-bg);
-      border: 1px solid var(--input-border);
-      border-radius: 6px;
-      color: var(--text-color);
-      font-size: 15px;
-      outline: none;
-      transition: border-color 0.2s, background 0.2s;
-    }
-
-    select option {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-    }
-
-    input::placeholder {
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    input:focus, select:focus {
-      border-color: var(--text-color);
-      background: rgba(255, 255, 255, 0.22);
-    }
-
-    .btn {
-      width: 100%;
-      padding: 14px;
-      background-color: var(--button-bg);
-      color: var(--button-text);
-      border: none;
-      border-radius: 6px;
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      cursor: pointer;
-      margin-top: 10px;
-      transition: opacity 0.2s, transform 0.1s;
-    }
-
-    .btn:hover {
-      opacity: 0.9;
-    }
-
-    .btn:active {
-      transform: scale(0.98);
-    }
-
-    .btn-secondary {
-      background: transparent;
-      border: 1px solid var(--text-color);
-      color: var(--text-color);
-    }
-
-    .btn-action {
-      background-color: #00d26a;
-      color: #ffffff;
-    }
-
-    .error-msg {
-      color: var(--record-red);
-      background: rgba(255, 255, 255, 0.9);
-      padding: 10px;
-      border-radius: 6px;
-      font-size: 13px;
-      margin-bottom: 16px;
-      display: none;
-    }
-
-    /* Panels & Containers */
-    .welcome-text {
-      font-size: 26px;
-      font-weight: 400;
-      letter-spacing: 1px;
-      margin-bottom: 24px;
-    }
-
-    .panel {
-      background: var(--card-bg);
-      padding: 24px;
-      border-radius: 12px;
-      border: 1px solid var(--input-border);
-      margin-top: 15px;
-    }
-
-    .panel-title {
-      font-size: 20px;
-      letter-spacing: 2px;
-      margin-bottom: 20px;
-      text-transform: uppercase;
-    }
-
-    .prompt-list {
-      margin: 20px 0;
-      text-align: left;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .prompt-item {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid var(--input-border);
-      padding: 14px;
-      border-radius: 8px;
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .prompt-item:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-
-    .prompt-item input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      margin-top: 3px;
-      cursor: pointer;
-      accent-color: var(--bg-color);
-    }
-
-    .prompt-item label {
-      text-transform: none;
-      letter-spacing: normal;
-      font-size: 15px;
-      line-height: 1.4;
-      margin: 0;
-      cursor: pointer;
-    }
-
-    /* Timers & Speech Views */
-    .selected-prompt-box {
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid var(--input-border);
-      padding: 18px;
-      border-radius: 8px;
-      font-size: 17px;
-      line-height: 1.5;
-      margin-bottom: 20px;
-      font-style: italic;
-    }
-
-    .timer-display {
-      font-size: 64px;
-      font-weight: bold;
-      letter-spacing: 2px;
-      margin: 15px 0;
-    }
-
-    .timer-controls {
-      display: flex;
-      gap: 10px;
-    }
-
-    .timer-status {
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--record-red);
-      margin-top: 15px;
-      display: none;
-      letter-spacing: 1px;
-    }
-
-    /* Speech Recording & Transcript */
-    .rec-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-top: 10px;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    .rec-indicator.active {
-      opacity: 1;
-    }
-
-    .dot {
-      width: 12px;
-      height: 12px;
-      background-color: var(--record-red);
-      border-radius: 50%;
-      animation: pulse 1s infinite alternate;
-    }
-
-    .transcript-box {
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid var(--input-border);
-      padding: 16px;
-      border-radius: 8px;
-      text-align: left;
-      font-size: 15px;
-      line-height: 1.6;
-      max-height: 180px;
-      overflow-y: auto;
-      margin-top: 15px;
-      display: none;
-      word-wrap: break-word;
-    }
-
-    @keyframes pulse {
-      from { opacity: 0.3; }
-      to { opacity: 1; }
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+      font-family: 'Roboto', sans-serif;
+      background-color: #f8f9fa;
     }
   </style>
 </head>
-<body>
+<body class="bg-gray-100 text-gray-800 min-h-screen">
+  <div id="root"></div>
 
-  <div class="container">
-    <div class="logo-wrapper">
-      <svg class="logo-svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M 100 22 C 109 22 113 28 122 30 C 131 32 138 27 146 32 C 154 37 157 45 163 52 C 169 59 177 62 180 71 C 183 80 178 88 178 98 C 178 108 183 116 180 125 C 177 134 169 137 163 144 C 157 151 154 159 146 164 C 138 169 131 164 122 166 C 113 168 109 174 100 174 C 91 174 87 168 78 166 C 69 164 62 169 54 164 C 46 159 43 151 37 144 C 31 137 23 134 20 125 C 17 116 22 108 22 98 C 22 88 17 80 20 71 C 23 62 31 59 37 52 C 43 45 46 37 54 32 C 62 27 69 32 78 30 C 87 28 91 22 100 22 Z" stroke="white" stroke-width="4.5" fill="none"/>
-        <path d="M 100 32 C 107 32 111 37 118 39 C 125 41 131 37 137 41 C 143 45 146 51 151 57 C 156 63 162 65 165 72 C 168 79 164 86 164 94 C 164 102 168 109 165 116 C 162 123 156 125 151 131 C 146 137 143 143 137 147 C 131 151 125 147 118 149 C 111 151 107 156 100 156 C 93 156 89 151 82 149 C 75 147 69 151 63 147 C 57 143 54 137 49 131 C 44 125 38 123 35 116 C 32 109 36 102 36 94 C 36 86 32 79 35 72 C 38 65 44 63 49 57 C 54 51 57 45 63 41 C 69 37 75 41 82 39 C 89 37 93 32 100 32 Z" stroke="white" stroke-width="4.5" fill="none"/>
-        <text x="100" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="62" font-weight="bold" fill="white" text-anchor="middle">A</text>
-      </svg>
-      <div class="logo-text">ATHENS DEBATE</div>
-    </div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-    <div id="loginView" class="view active">
-      <div id="errorMsg" class="error-msg">Invalid email or password.</div>
-      <form onsubmit="handleLogin(event)">
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" placeholder="Start typing your username here..." required>
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" placeholder="Start typing your password here..." required>
-        </div>
-        <button type="submit" class="btn">LOG IN</button>
-      </form>
-    </div>
+    // Hardcoded credentials
+    const FIXED_EMAIL = "vathukrishnaswamy@gmail.com";
+    const FIXED_PASS = "gray10Five";
 
-    <div id="welcomeView" class="view">
-      <h1 class="welcome-text">Welcome Varun Krishnaswamy</h1>
-      <button class="btn" onclick="showView('generatorView')">IMPROMPTU</button>
-    </div>
+    // Initialize fixed account directly in localStorage
+    (function initializeDefaultAccount() {
+      const storedUsers = JSON.parse(localStorage.getItem("studentvue_users") || "{}");
+      storedUsers[FIXED_EMAIL.toLowerCase()] = { password: FIXED_PASS };
+      localStorage.setItem("studentvue_users", JSON.stringify(storedUsers));
+    })();
 
-    <div id="generatorView" class="view">
-      <div class="panel">
-        <h2 class="panel-title">Impromptu Generator</h2>
-        
-        <div class="form-group">
-          <label for="schoolLevel">School Level</label>
-          <select id="schoolLevel">
-            <option value="MS" selected>Middle School</option>
-            <option value="HS">High School</option>
-            <option value="Open">Open / Novice</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="numPrompts">Number of Prompts (Max 10)</label>
-          <input type="number" id="numPrompts" min="1" max="10" value="3">
-        </div>
-
-        <button class="btn" onclick="generatePrompts()">GENERATE PROMPTS</button>
-
-        <div id="promptContainer" class="prompt-list"></div>
-
-        <button id="selectBtn" class="btn" style="display: none;" onclick="startPrep()">SELECT & START PREP</button>
-      </div>
-    </div>
-
-    <div id="prepTimerView" class="view">
-      <div class="panel">
-        <h2 class="panel-title">Prep Time</h2>
-        <div class="selected-prompt-box activePromptDisplay"></div>
-
-        <div class="timer-display" id="prepTimerDisplay">02:00</div>
-        <div id="prepTimesUp" class="timer-status">TIME'S UP!</div>
-
-        <div class="timer-controls">
-          <button class="btn" onclick="startPrepTimer()">Start</button>
-          <button class="btn btn-secondary" onclick="pausePrepTimer()">Pause</button>
-          <button class="btn btn-secondary" onclick="resetPrepTimer()">Reset</button>
-        </div>
-
-        <button class="btn btn-action" style="margin-top: 15px;" onclick="goToSpeechView()">START SPEECH (5 MIN)</button>
-        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="showView('generatorView')">← Back to Generator</button>
-      </div>
-    </div>
-
-    <div id="speechTimerView" class="view">
-      <div class="panel">
-        <h2 class="panel-title">Speech Time</h2>
-        <div class="selected-prompt-box activePromptDisplay"></div>
-
-        <div class="timer-display" id="speechTimerDisplay">05:00</div>
-        <div id="speechTimesUp" class="timer-status">TIME'S UP!</div>
-
-        <div class="rec-indicator" id="recIndicator">
-          <div class="dot"></div> Recording Live
-        </div>
-
-        <div class="timer-controls" style="margin-top: 10px;">
-          <button class="btn" onclick="startSpeechTimer()">Start</button>
-          <button class="btn btn-secondary" onclick="pauseSpeechTimer()">Pause</button>
-          <button class="btn btn-secondary" onclick="resetSpeechTimer()">Reset</button>
-        </div>
-
-        <div class="transcript-box" id="transcriptBox">
-          <label style="opacity: 0.7; margin-bottom: 8px;">Speech Transcript:</label>
-          <div id="transcriptText">Listening for speech...</div>
-        </div>
-
-        <button class="btn btn-secondary" style="margin-top: 20px;" onclick="showView('prepTimerView')">← Back to Prep</button>
-      </div>
-    </div>
-
-  </div>
-
-  <script>
-    // Topic Bank (~100 items)
-    const topicBank = [
-      "Couch",
-      "Chair",
-      "Spoon",
-      "Mirror",
-      "Clock",
-      "Pillow",
-      "Umbrella",
-      "Candle",
-      "Ladder",
-      "Blanket",
-      "Broom",
-      "Key",
-      "Lamp",
-      "Drawer",
-      "Curtain",
-      "Bucket",
-      "Kettle",
-      "Basket",
-      "Doorknob",
-      "Sponge",
-      "Hammer",
-      "Scissors",
-      "Compass",
-      "Magnet",
-      "Flashlight",
-      "Wrench",
-      "Anchor",
-      "Telescope",
-      "Whistle",
-      "Battery",
-      "Camera",
-      "Rope",
-      "Needle",
-      "Padlock",
-      "Fan",
-      "Mountain",
-      "River",
-      "Cloud",
-      "Seashell",
-      "Feather",
-      "Acorn",
-      "Cactus",
-      "Volcano",
-      "Iceberg",
-      "Pebble",
-      "Thunder",
-      "Forest",
-      "Desert",
-      "Rainbow",
-      "Puddle",
-      "Bread",
-      "Lemon",
-      "Pepper",
-      "Honey",
-      "Pretzel",
-      "Pickle",
-      "Toast",
-      "Onion",
-      "Marshmallow",
-      "Chopsticks",
-      "Owl",
-      "Octopus",
-      "Turtle",
-      "Bee",
-      "Penguin",
-      "Chameleon",
-      "Elephant",
-      "Spider",
-      "Peacock",
-      "Snail",
-      "Bridge",
-      "Lighthouse",
-      "Attic",
-      "Elevator",
-      "Tunnel",
-      "Fence",
-      "Balcony",
-      "Staircase",
-      "Windmill",
-      "Crossroads",
-      "Hat",
-      "Glove",
-      "Scarf",
-      "Boot",
-      "Button",
-      "Zipper",
-      "Necktie",
-      "Sock",
-      "Belt",
-      "Sunglasses",
-      "Balloon",
-      "Puzzle",
-      "Marble",
-      "Domino",
-      "Kite",
-      "Coin",
-      "Map",
-      "Stamp",
-      "Dice",
-      "Mask",
-      "Run",
-      "Whisper",
-      "Climb",
-      "Forgive",
-      "Wander",
-      "Build",
-      "Break",
-      "Dream",
-      "Stumble",
-      "Leap",
-      "Listen",
-      "Chase",
-      "Surrender",
-      "Ignite",
-      "Balance",
-      "Wait",
-      "Grow",
-      "Vanish",
-      "Pretend",
-      "Begin",
-      "Dance",
-      "Fall",
-      "Escape",
-      "Remember",
-      "Hesitate",
-      "Bloom",
-      "Wrestle",
-      "Drift",
-      "Rebuild",
-      "Shine",
-      "Curiosity killed the cat.",
-      "Don't dance while carrying eggs in your basket.",
-      "The early bird catches the worm.",
-      "Don't count your chickens before they hatch.",
-      "A rolling stone gathers no moss.",
-      "When it rains, it pours.",
-      "The grass is always greener on the other side.",
-      "Actions speak louder than words.",
-      "Don't bite the hand that feeds you.",
-      "Every cloud has a silver lining.",
-      "You can't have your cake and eat it too.",
-      "A picture is worth a thousand words.",
-      "Barking up the wrong tree.",
-      "Don't put all your eggs in one basket.",
-      "Too many cooks spoil the broth.",
-      "The pen is mightier than the sword.",
-      "Bite off more than you can chew.",
-      "Let sleeping dogs lie.",
-      "Kill two birds with one stone.",
-      "Burning the candle at both ends.",
-      "A stitch in time saves nine.",
-      "Don't judge a book by its cover.",
-      "The apple doesn't fall far from the tree.",
-      "Still waters run deep.",
-      "Beggars can't be choosers.",
-      "Fortune favors the bold.",
-      "Practice makes perfect.",
-      "Honesty is the best policy.",
-      "Better late than never.",
-      "Look before you leap.",
-      "Necessity is the mother of invention.",
-      "When in Rome, do as the Romans do.",
-      "The squeaky wheel gets the grease.",
-      "Don't cry over spilled milk.",
-      "Birds of a feather flock together.",
-      "You reap what you sow.",
-      "Rome wasn't built in a day.",
-      "A watched pot never boils.",
-      "Two wrongs don't make a right.",
-      "The whole is greater than the sum of its parts.",
-      "Be the change you wish to see in the world.",
-      "Fall seven times, stand up eight.",
-      "In the middle of difficulty lies opportunity.",
-      "Not all those who wander are lost.",
-      "The only true wisdom is knowing you know nothing.",
-      "What doesn't kill you makes you stronger.",
-      "A journey of a thousand miles begins with a single step.",
-      "The unexamined life is not worth living.",
-      "We are what we repeatedly do.",
-      "Turn your wounds into wisdom.",
-      "Whether you think you can or you can't, you're right.",
-      "The best way to predict the future is to create it.",
-      "It always seems impossible until it's done.",
-      "Do one thing every day that scares you.",
-      "The mind is everything; what you think you become.",
-      "Life is what happens when you're busy making other plans.",
-      "Courage is grace under pressure.",
-      "The obstacle is the way.",
-      "Silence is a source of great strength.",
-      "Waste no more time arguing what a good person should be. Be one.",
-      "Happiness depends upon ourselves.",
-      "He who has a why can bear almost any how.",
-      "Simplicity is the ultimate sophistication.",
-      "The only impossible journey is the one you never begin.",
-      "Well done is better than well said.",
-      "The future belongs to those who believe in their dreams.",
-      "Change your thoughts and you change your world.",
-      "A smooth sea never made a skilled sailor.",
-      "The harder the conflict, the greater the triumph.",
-      "Stars can't shine without darkness.",
-      "Doubt kills more dreams than failure ever will.",
-      "Great things never came from comfort zones.",
-      "Every expert was once a beginner.",
-      "Energy and persistence conquer all things.",
-      "The secret of getting ahead is getting started.",
-      "Speak the truth even if your voice shakes.",
-      "Bloom where you are planted.",
-      "You miss every shot you don't take.",
-      "The tongue has no bones but is strong enough to break a heart.",
-      "A ship in harbor is safe, but that's not what ships are built for.",
-      "Comparison is the thief of joy.",
-      "Luck is what happens when preparation meets opportunity.",
-      "The best time to plant a tree was twenty years ago.",
-      "If you want to go fast, go alone; if you want to go far, go together.",
-      "Don't let perfect be the enemy of good.",
-      "A goal without a plan is just a wish.",
-      "Smooth roads never make good drivers.",
-      "Character is what you do when no one is watching.",
-      "The flower that blooms in adversity is the rarest of all.",
-      "You can't cross the sea merely by standing and staring at the water.",
-      "Water the plants you want to grow.",
-      "Even the longest night ends with sunrise.",
-      "A candle loses nothing by lighting another candle.",
-      "The river cuts through rock not by power but persistence.",
-      "Don't wait for the storm to pass; learn to dance in the rain.",
-      "The bamboo that bends is stronger than the oak that resists.",
-      "A diamond is a chunk of coal that did well under pressure.",
-      "You cannot pour from an empty cup.",
-      "Where there's a will, there's a way."
+    // Subjects with themed styles & icons
+    const SUBJECT_OPTIONS = [
+      { name: "Math", color: "bg-purple-900", icon: "calculate", bannerColor: "bg-purple-950" },
+      { name: "Science", color: "bg-red-800", icon: "science", bannerColor: "bg-red-900" },
+      { name: "Language Arts", color: "bg-sky-800", icon: "auto_stories", bannerColor: "bg-sky-900" },
+      { name: "Social Studies", color: "bg-emerald-800", icon: "public", bannerColor: "bg-emerald-900" },
+      { name: "Advisory", color: "bg-cyan-600", icon: "groups", bannerColor: "bg-cyan-700" },
+      { name: "Physical Education", color: "bg-amber-800", icon: "fitness_center", bannerColor: "bg-amber-900" },
+      { name: "SEARCH", color: "bg-rose-800", icon: "search", bannerColor: "bg-rose-900" },
+      { name: "Exploratory Wheel", color: "bg-lime-700", icon: "toys", bannerColor: "bg-lime-800" },
+      { name: "Model Engineering", color: "bg-indigo-800", icon: "precision_manufacturing", bannerColor: "bg-indigo-900" },
+      { name: "Cooking", color: "bg-orange-700", icon: "restaurant", bannerColor: "bg-orange-800" },
+      { name: "Woodshop", color: "bg-yellow-900", icon: "carpenter", bannerColor: "bg-yellow-950" },
+      { name: "Leadership", color: "bg-teal-800", icon: "military_tech", bannerColor: "bg-teal-900" },
+      { name: "Yearbook", color: "bg-fuchsia-800", icon: "photo_camera", bannerColor: "bg-fuchsia-900" },
+      { name: "Study Hall", color: "bg-slate-700", icon: "menu_book", bannerColor: "bg-slate-800" },
+      { name: "Beginning Band", color: "bg-blue-800", icon: "music_note", bannerColor: "bg-blue-900" },
+      { name: "Beginning Orchestra", color: "bg-indigo-900", icon: "music_video", bannerColor: "bg-indigo-950" },
+      { name: "Beginning Choir", color: "bg-pink-800", icon: "mic", bannerColor: "bg-pink-900" },
+      { name: "Creative Media", color: "bg-violet-800", icon: "palette", bannerColor: "bg-violet-900" },
+      { name: "Art 1", color: "bg-rose-700", icon: "brush", bannerColor: "bg-rose-800" },
+      { name: "Drama", color: "bg-amber-900", icon: "theater_comedy", bannerColor: "bg-amber-950" },
+      { name: "Forensic Science", color: "bg-neutral-800", icon: "fingerprint", bannerColor: "bg-neutral-900" },
+      { name: "ELD 1", color: "bg-sky-700", icon: "translate", bannerColor: "bg-sky-800" },
+      { name: "ELD 2", color: "bg-blue-700", icon: "translate", bannerColor: "bg-blue-800" },
+      { name: "ELD 3", color: "bg-indigo-700", icon: "translate", bannerColor: "bg-indigo-800" }
     ];
 
-    let selectedPrompt = "";
-    
-    // Prep Timer (2 Min)
-    let prepSeconds = 120;
-    let prepInterval = null;
-
-    // Speech Timer (5 Min)
-    let speechSeconds = 300;
-    let speechInterval = null;
-
-    // Speech Recognition & Audio
-    let recognition = null;
-    let audioCtx = null;
-    let transcriptText = "";
-
-    // Navigation
-    function showView(viewId) {
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      document.getElementById(viewId).classList.add('active');
-    }
-
-    // Login
-    function handleLogin(event) {
-      event.preventDefault();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const errorMsg = document.getElementById('errorMsg');
-
-      if (email === 'V.Krishnaswamy901' && password === 'gray10Five') {
-        errorMsg.style.display = 'none';
-        showView('welcomeView');
-      } else {
-        errorMsg.style.display = 'block';
-      }
-    }
-
-    // Generator
-    function generatePrompts() {
-      const container = document.getElementById('promptContainer');
-      const selectBtn = document.getElementById('selectBtn');
-      let count = parseInt(document.getElementById('numPrompts').value);
-
-      if (isNaN(count) || count < 1) count = 1;
-      if (count > 10) count = 10;
-      document.getElementById('numPrompts').value = count;
-
-      container.innerHTML = '';
-      selectBtn.style.display = 'none';
-      selectedPrompt = '';
-
-      const shuffled = [...topicBank].sort(() => 0.5 - Math.random());
-      const selectedTopics = shuffled.slice(0, count);
-
-      selectedTopics.forEach((topic, idx) => {
-        const item = document.createElement('div');
-        item.className = 'prompt-item';
-        item.onclick = (e) => {
-          if(e.target.tagName !== 'INPUT') {
-            const cb = item.querySelector('input');
-            cb.checked = !cb.checked;
-            handleCheckboxSelect(cb);
-          }
-        };
-
-        item.innerHTML = `
-          <input type="checkbox" id="p_${idx}" name="prompt_choice" value="${escapeHtml(topic)}" onchange="handleCheckboxSelect(this)">
-          <label for="p_${idx}">${topic}</label>
-        `;
-        container.appendChild(item);
+    // Grade calculation including +, -, and plain letter grades
+    function calculateGrade(assignments) {
+      if (!assignments || assignments.length === 0) return { percent: null, letter: "N/A" };
+      let totalEarned = 0;
+      let totalMax = 0;
+      assignments.forEach(a => {
+        totalEarned += Number(a.earnedPoints || 0);
+        totalMax += Number(a.totalPoints || 0);
       });
+      if (totalMax === 0) return { percent: null, letter: "N/A" };
+      const pct = (totalEarned / totalMax) * 100;
+
+      let letter = "F";
+      if (pct >= 97) letter = "A+";
+      else if (pct >= 93) letter = "A";
+      else if (pct >= 90) letter = "A-";
+      else if (pct >= 87) letter = "B+";
+      else if (pct >= 83) letter = "B";
+      else if (pct >= 80) letter = "B-";
+      else if (pct >= 77) letter = "C+";
+      else if (pct >= 73) letter = "C";
+      else if (pct >= 70) letter = "C-";
+      else if (pct >= 67) letter = "D+";
+      else if (pct >= 63) letter = "D";
+      else if (pct >= 60) letter = "D-";
+      else letter = "F";
+
+      return { percent: pct.toFixed(1), letter };
     }
 
-    function handleCheckboxSelect(current) {
-      const checkboxes = document.querySelectorAll('input[name="prompt_choice"]');
-      checkboxes.forEach(cb => {
-        if (cb !== current) cb.checked = false;
+    function App() {
+      // Persistence for currently active session across refreshes
+      const [currentUser, setCurrentUser] = useState(() => {
+        return localStorage.getItem("studentvue_current_user") || null;
       });
 
-      const selectBtn = document.getElementById('selectBtn');
-      if (current.checked) {
-        selectedPrompt = current.value;
-        selectBtn.style.display = 'block';
-      } else {
-        selectedPrompt = '';
-        selectBtn.style.display = 'none';
-      }
-    }
+      const [authUsername, setAuthUsername] = useState("");
+      const [authPassword, setAuthPassword] = useState("");
+      const [authError, setAuthError] = useState("");
 
-    // Start Prep
-    function startPrep() {
-      if (!selectedPrompt) return;
-      document.querySelectorAll('.activePromptDisplay').forEach(el => {
-        el.innerText = `"${selectedPrompt}"`;
-      });
-      resetPrepTimer();
-      showView('prepTimerView');
-    }
+      // Persistent Gradebook Data
+      const [classes, setClasses] = useState([]);
+      const [selectedClassId, setSelectedClassId] = useState(null);
 
-    // 2-MIN PREP TIMER LOGIC
-    function updatePrepDisplay() {
-      const mins = Math.floor(prepSeconds / 60).toString().padStart(2, '0');
-      const secs = (prepSeconds % 60).toString().padStart(2, '0');
-      document.getElementById('prepTimerDisplay').innerText = `${mins}:${secs}`;
-    }
+      // Modals
+      const [showAddClass, setShowAddClass] = useState(false);
+      const [showEditClass, setShowEditClass] = useState(false);
+      const [showAddAssignment, setShowAddAssignment] = useState(false);
+      const [showEditAssignment, setShowEditAssignment] = useState(false);
 
-    function startPrepTimer() {
-      if (prepInterval) return;
-      document.getElementById('prepTimesUp').style.display = 'none';
-      prepInterval = setInterval(() => {
-        if (prepSeconds > 0) {
-          prepSeconds--;
-          updatePrepDisplay();
-        } else {
-          pausePrepTimer();
-          document.getElementById('prepTimesUp').style.display = 'block';
-          playBellSound();
-        }
-      }, 1000);
-    }
-
-    function pausePrepTimer() {
-      if (prepInterval) {
-        clearInterval(prepInterval);
-        prepInterval = null;
-      }
-    }
-
-    function resetPrepTimer() {
-      pausePrepTimer();
-      prepSeconds = 120;
-      updatePrepDisplay();
-      document.getElementById('prepTimesUp').style.display = 'none';
-    }
-
-    // Transition Prep -> Speech
-    function goToSpeechView() {
-      pausePrepTimer();
-      resetSpeechTimer();
-      showView('speechTimerView');
-    }
-
-    // 5-MIN SPEECH TIMER & RECORDING LOGIC
-    function updateSpeechDisplay() {
-      const mins = Math.floor(speechSeconds / 60).toString().padStart(2, '0');
-      const secs = (speechSeconds % 60).toString().padStart(2, '0');
-      document.getElementById('speechTimerDisplay').innerText = `${mins}:${secs}`;
-    }
-
-    function startSpeechTimer() {
-      if (speechInterval) return;
-      document.getElementById('speechTimesUp').style.display = 'none';
-      startRecording();
-
-      speechInterval = setInterval(() => {
-        if (speechSeconds > 0) {
-          speechSeconds--;
-          updateSpeechDisplay();
-        } else {
-          pauseSpeechTimer();
-          document.getElementById('speechTimesUp').style.display = 'block';
-          playBellSound();
-        }
-      }, 1000);
-    }
-
-    function pauseSpeechTimer() {
-      if (speechInterval) {
-        clearInterval(speechInterval);
-        speechInterval = null;
-      }
-      stopRecording();
-    }
-
-    function resetSpeechTimer() {
-      pauseSpeechTimer();
-      speechSeconds = 300;
-      updateSpeechDisplay();
-      document.getElementById('speechTimesUp').style.display = 'none';
-      document.getElementById('transcriptBox').style.display = 'none';
-      document.getElementById('transcriptText').innerText = "Listening for speech...";
-      transcriptText = "";
-    }
-
-    // Web Speech API Integration for Recording & Transcription
-    function startRecording() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      // Form States
+      const [className, setClassName] = useState(SUBJECT_OPTIONS[0].name);
+      const [teacherName, setTeacherName] = useState("");
       
-      document.getElementById('recIndicator').classList.add('active');
-      document.getElementById('transcriptBox').style.display = 'block';
+      const [assignmentName, setAssignmentName] = useState("");
+      const [assignmentType, setAssignmentType] = useState("Homework");
+      const [datePosted, setDatePosted] = useState("");
+      const [dateDue, setDateDue] = useState("");
+      const [earnedPoints, setEarnedPoints] = useState("");
+      const [totalPoints, setTotalPoints] = useState("");
+      const [notes, setNotes] = useState("");
+      const [editingAssignmentId, setEditingAssignmentId] = useState(null);
 
-      if (!SpeechRecognition) {
-        document.getElementById('transcriptText').innerText = "Browser doesn't support live Speech-to-Text transcription. (Timer active)";
-        return;
-      }
-
-      if (!recognition) {
-        recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-
-        recognition.onresult = (event) => {
-          let currentTranscript = "";
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            currentTranscript += event.results[i][0].transcript;
+      // Load persistent user classes whenever session updates
+      useEffect(() => {
+        if (currentUser) {
+          const storedData = localStorage.getItem(`studentvue_classes_${currentUser}`);
+          if (storedData) {
+            try {
+              setClasses(JSON.parse(storedData));
+            } catch (err) {
+              setClasses([]);
+            }
+          } else {
+            setClasses([]);
           }
-          document.getElementById('transcriptText').innerText = currentTranscript || transcriptText || "Listening for speech...";
+        } else {
+          setClasses([]);
+        }
+        setSelectedClassId(null);
+      }, [currentUser]);
+
+      // Save user classes to localStorage on every change
+      useEffect(() => {
+        if (currentUser) {
+          localStorage.setItem(`studentvue_classes_${currentUser}`, JSON.stringify(classes));
+        }
+      }, [classes, currentUser]);
+
+      // Authentication Handler targeting hardcoded login
+      const handleLogin = (e) => {
+        e.preventDefault();
+        setAuthError("");
+        const usernameTrimmed = authUsername.trim().toLowerCase();
+
+        if (usernameTrimmed === FIXED_EMAIL.toLowerCase() && authPassword === FIXED_PASS) {
+          localStorage.setItem("studentvue_current_user", usernameTrimmed);
+          setCurrentUser(usernameTrimmed);
+          setAuthUsername("");
+          setAuthPassword("");
+        } else {
+          setAuthError("Invalid email or password.");
+        }
+      };
+
+      const handleLogout = () => {
+        localStorage.removeItem("studentvue_current_user");
+        setCurrentUser(null);
+      };
+
+      const activeClass = classes.find(c => c.id === selectedClassId);
+
+      // Class Handlers
+      const handleAddClass = (e) => {
+        e.preventDefault();
+        const newClass = {
+          id: Date.now().toString(),
+          name: className,
+          teacher: teacherName || "Unassigned",
+          assignments: []
         };
+        setClasses(prev => [...prev, newClass]);
+        setTeacherName("");
+        setShowAddClass(false);
+      };
 
-        recognition.onerror = (e) => {
-          console.log("Speech Recognition Error:", e);
+      const handleOpenEditClass = (c, e) => {
+        if (e) e.stopPropagation();
+        setClassName(c.name);
+        setTeacherName(c.teacher);
+        setSelectedClassId(c.id);
+        setShowEditClass(true);
+      };
+
+      const handleSaveEditClass = (e) => {
+        e.preventDefault();
+        setClasses(prev => prev.map(c => c.id === selectedClassId ? { ...c, name: className, teacher: teacherName } : c));
+        setShowEditClass(false);
+      };
+
+      const handleDeleteClass = (id, e) => {
+        if (e) e.stopPropagation();
+        if (window.confirm("Are you sure you want to delete this class?")) {
+          setClasses(prev => prev.filter(c => c.id !== id));
+          if (selectedClassId === id) setSelectedClassId(null);
+        }
+      };
+
+      // Assignment Handlers
+      const handleAddAssignment = (e) => {
+        e.preventDefault();
+        if (!activeClass) return;
+        const newAssignment = {
+          id: Date.now().toString(),
+          name: assignmentName,
+          type: assignmentType,
+          datePosted,
+          dateDue,
+          earnedPoints: Number(earnedPoints),
+          totalPoints: Number(totalPoints),
+          notes
         };
+        setClasses(prev => prev.map(c => {
+          if (c.id === activeClass.id) {
+            return { ...c, assignments: [newAssignment, ...c.assignments] };
+          }
+          return c;
+        }));
+        resetAssignmentForm();
+        setShowAddAssignment(false);
+      };
+
+      const handleOpenEditAssignment = (a) => {
+        setEditingAssignmentId(a.id);
+        setAssignmentName(a.name);
+        setAssignmentType(a.type);
+        setDatePosted(a.datePosted || "");
+        setDateDue(a.dateDue || "");
+        setEarnedPoints(a.earnedPoints);
+        setTotalPoints(a.totalPoints);
+        setNotes(a.notes || "");
+        setShowEditAssignment(true);
+      };
+
+      const handleSaveEditAssignment = (e) => {
+        e.preventDefault();
+        setClasses(prev => prev.map(c => {
+          if (c.id === selectedClassId) {
+            const updated = c.assignments.map(a => {
+              if (a.id === editingAssignmentId) {
+                return {
+                  ...a,
+                  name: assignmentName,
+                  type: assignmentType,
+                  datePosted,
+                  dateDue,
+                  earnedPoints: Number(earnedPoints),
+                  totalPoints: Number(totalPoints),
+                  notes
+                };
+              }
+              return a;
+            });
+            return { ...c, assignments: updated };
+          }
+          return c;
+        }));
+        resetAssignmentForm();
+        setShowEditAssignment(false);
+      };
+
+      const handleDeleteAssignment = (aId) => {
+        if (window.confirm("Are you sure you want to delete this assignment?")) {
+          setClasses(prev => prev.map(c => {
+            if (c.id === selectedClassId) {
+              return { ...c, assignments: c.assignments.filter(a => a.id !== aId) };
+            }
+            return c;
+          }));
+        }
+      };
+
+      const resetAssignmentForm = () => {
+        setAssignmentName("");
+        setAssignmentType("Homework");
+        setDatePosted("");
+        setDateDue("");
+        setEarnedPoints("");
+        setTotalPoints("");
+        setNotes("");
+        setEditingAssignmentId(null);
+      };
+
+      // LOGIN VIEW
+      if (!currentUser) {
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+            <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full border border-gray-200">
+              <div className="flex items-center justify-center space-x-2 mb-6">
+                <span className="material-symbols-outlined text-blue-600 text-4xl">school</span>
+                <h1 className="text-2xl font-bold text-gray-800">StudentVUE</h1>
+              </div>
+              <h2 className="text-lg font-medium text-gray-700 text-center mb-4">
+                Sign In to Your Account
+              </h2>
+              {authError && (
+                <div className="bg-red-50 text-red-600 text-sm p-3 rounded mb-4 border border-red-200">
+                  {authError}
+                </div>
+              )}
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="vathukrishnaswamy@gmail.com"
+                    value={authUsername}
+                    onChange={(e) => setAuthUsername(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Password</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Enter password"
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded text-sm transition"
+                >
+                  Log In
+                </button>
+              </form>
+            </div>
+          </div>
+        );
       }
 
-      try {
-        recognition.start();
-      } catch (err) {
-        // Recognition already active
-      }
+      // MAIN APP VIEW
+      return (
+        <div className="min-h-screen bg-slate-100 flex flex-col">
+          <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
+            <div className="flex items-center space-x-3">
+              <span className="material-symbols-outlined text-blue-600 text-3xl">school</span>
+              <h1 className="text-xl font-medium text-gray-800">StudentVUE Gradebook</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm font-medium text-gray-600">
+                User: <strong className="text-gray-800">{currentUser}</strong>
+              </span>
+              <button
+                onClick={() => setShowAddClass(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 shadow-sm transition"
+              >
+                <span className="material-symbols-outlined text-sm">add</span> Add Class
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-md text-sm font-medium transition flex items-center gap-1"
+                title="Log Out"
+              >
+                <span className="material-symbols-outlined text-sm">logout</span> Log Out
+              </button>
+            </div>
+          </header>
+
+          <main className="flex-1 p-6 max-w-7xl mx-auto w-full">
+            {activeClass ? (
+              <div>
+                <button
+                  onClick={() => setSelectedClassId(null)}
+                  className="mb-4 text-blue-600 hover:underline text-sm font-medium flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-sm">arrow_back</span> Back to Classes
+                </button>
+
+                {(() => {
+                  const subjectInfo = SUBJECT_OPTIONS.find(s => s.name === activeClass.name) || SUBJECT_OPTIONS[0];
+                  const { percent, letter } = calculateGrade(activeClass.assignments);
+                  return (
+                    <div className={`${subjectInfo.color} text-white rounded-lg shadow-md p-6 mb-6 flex justify-between items-center relative overflow-hidden`}>
+                      <span className="material-symbols-outlined absolute -right-6 -bottom-6 text-white/10 text-9xl pointer-events-none">
+                        {subjectInfo.icon}
+                      </span>
+                      <div>
+                        <h2 className="text-2xl font-bold">{activeClass.name}</h2>
+                        <p className="text-sm opacity-90">Teacher: {activeClass.teacher}</p>
+                      </div>
+                      <div className="text-right flex items-center gap-6">
+                        <div>
+                          <div className="text-3xl font-extrabold">{letter}</div>
+                          <div className="text-sm opacity-90">{percent ? `${percent}%` : "No Grade"}</div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => handleOpenEditClass(activeClass, e)}
+                            className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition"
+                            title="Edit Class"
+                          >
+                            <span className="material-symbols-outlined text-sm">edit</span>
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteClass(activeClass.id, e)}
+                            className="bg-red-500/80 hover:bg-red-600 text-white p-2 rounded-full transition"
+                            title="Delete Class"
+                          >
+                            <span className="material-symbols-outlined text-sm">delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-700">Assignments</h3>
+                  <button
+                    onClick={() => setShowAddAssignment(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-1 transition shadow-sm"
+                  >
+                    <span className="material-symbols-outlined text-sm">add</span> Add Assignment
+                  </button>
+                </div>
+
+                {activeClass.assignments.length === 0 ? (
+                  <div className="bg-white rounded-lg p-12 text-center text-gray-500 border border-gray-200">
+                    <span className="material-symbols-outlined text-5xl mb-2 text-gray-300">assignment</span>
+                    <p>No assignments added yet. Click "+ Add Assignment" to get started.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {activeClass.assignments.map((a) => {
+                      const pct = a.totalPoints > 0 ? (a.earnedPoints / a.totalPoints) * 100 : 0;
+                      return (
+                        <div key={a.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm flex items-center justify-between hover:border-gray-300 transition">
+                          <div className="flex items-center gap-4 flex-1">
+                            <div className="bg-gray-100 text-gray-600 px-3 py-2 rounded text-center min-w-[80px]">
+                              <div className="text-[10px] uppercase tracking-wider font-semibold">Due</div>
+                              <div className="text-xs font-bold">{a.dateDue || "N/A"}</div>
+                            </div>
+                            
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold text-gray-800">{a.name}</h4>
+                                <span className="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded border border-blue-200 font-medium">{a.type}</span>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">{a.earnedPoints} out of {a.totalPoints} pts</p>
+                              <div className="w-full bg-gray-200 h-2 rounded-full mt-2 overflow-hidden max-w-md">
+                                <div className="bg-emerald-600 h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%` }}></div>
+                              </div>
+                              {a.notes && <p className="text-xs text-gray-500 italic mt-2">Note: {a.notes}</p>}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-4 ml-4">
+                            <div className="bg-emerald-700 text-white px-4 py-2 rounded text-center min-w-[70px]">
+                              <div className="text-lg font-bold">{a.earnedPoints}</div>
+                              <div className="text-[10px] opacity-80">Max {a.totalPoints}</div>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <button
+                                onClick={() => handleOpenEditAssignment(a)}
+                                className="text-gray-400 hover:text-blue-600 p-1"
+                                title="Edit Assignment"
+                              >
+                                <span className="material-symbols-outlined text-sm">edit</span>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteAssignment(a.id)}
+                                className="text-gray-400 hover:text-red-600 p-1"
+                                title="Delete Assignment"
+                              >
+                                <span className="material-symbols-outlined text-sm">delete</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div>
+                {classes.length === 0 ? (
+                  <div className="bg-white rounded-lg p-16 text-center border border-gray-200 max-w-xl mx-auto my-12">
+                    <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">class</span>
+                    <h2 className="text-xl font-medium text-gray-700 mb-2">No Classes Added Yet</h2>
+                    <p className="text-gray-500 mb-6 text-sm">Start building your StudentVUE schedule by adding your first class.</p>
+                    <button
+                      onClick={() => setShowAddClass(true)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-md font-medium inline-flex items-center gap-2 shadow-sm transition"
+                    >
+                      <span className="material-symbols-outlined">add</span> Add Your First Class
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {classes.map((c, index) => {
+                      const subjectInfo = SUBJECT_OPTIONS.find(s => s.name === c.name) || SUBJECT_OPTIONS[0];
+                      const { percent, letter } = calculateGrade(c.assignments);
+                      return (
+                        <div
+                          key={c.id}
+                          onClick={() => setSelectedClassId(c.id)}
+                          className={`${subjectInfo.color} text-white rounded-lg shadow cursor-pointer transition transform hover:-translate-y-1 hover:shadow-lg relative overflow-hidden flex flex-col justify-between h-36`}
+                        >
+                          <div className={`${subjectInfo.bannerColor} px-3 py-1.5 flex justify-between items-center text-xs border-b border-white/10`}>
+                            <span className="font-semibold truncate">{index + 1}: {c.name}</span>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={(e) => handleOpenEditClass(c, e)}
+                                className="p-1 hover:bg-white/20 rounded transition"
+                                title="Edit Class"
+                              >
+                                <span className="material-symbols-outlined text-xs">edit</span>
+                              </button>
+                              <button
+                                onClick={(e) => handleDeleteClass(c.id, e)}
+                                className="p-1 hover:bg-red-500/50 rounded transition"
+                                title="Delete Class"
+                              >
+                                <span className="material-symbols-outlined text-xs">delete</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="p-4 flex justify-between items-center relative z-10">
+                            <span className="text-5xl font-extrabold">{letter}</span>
+                            <span className="text-xl font-medium">{percent ? `${percent}%` : "N/A"}</span>
+                          </div>
+
+                          <span className="material-symbols-outlined absolute right-2 bottom-0 text-white/10 text-8xl pointer-events-none">
+                            {subjectInfo.icon}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </main>
+
+          {/* Modal: Add Class */}
+          {showAddClass && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Add Class</h3>
+                <form onSubmit={handleAddClass} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Class Name</label>
+                    <select
+                      value={className}
+                      onChange={(e) => setClassName(e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                    >
+                      {SUBJECT_OPTIONS.map((s) => (
+                        <option key={s.name} value={s.name}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Teacher Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Mr. Smith"
+                      value={teacherName}
+                      onChange={(e) => setTeacherName(e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddClass(false)}
+                      className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Modal: Edit Class */}
+          {showEditClass && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Edit Class</h3>
+                <form onSubmit={handleSaveEditClass} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Class Name</label>
+                    <select
+                      value={className}
+                      onChange={(e) => setClassName(e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                    >
+                      {SUBJECT_OPTIONS.map((s) => (
+                        <option key={s.name} value={s.name}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Teacher Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Mr. Smith"
+                      value={teacherName}
+                      onChange={(e) => setTeacherName(e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditClass(false)}
+                      className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Update Class
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Modal: Add Assignment */}
+          {showAddAssignment && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Add Assignment</h3>
+                <form onSubmit={handleAddAssignment} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Assignment Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Midterm Exam"
+                      value={assignmentName}
+                      onChange={(e) => setAssignmentName(e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Type</label>
+                      <select
+                        value={assignmentType}
+                        onChange={(e) => setAssignmentType(e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                      >
+                        <option value="Homework">Homework</option>
+                        <option value="Classwork">Classwork</option>
+                        <option value="Quiz">Quiz</option>
+                        <option value="Test">Test</option>
+                        <option value="Project">Project</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Due Date</label>
+                      <input
+                        type="date"
+                        value={dateDue}
+                        onChange={(e) => setDateDue(e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Earned Points</label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        step="any"
+                        placeholder="e.g. 95"
+                        value={earnedPoints}
+                        onChange={(e) => setEarnedPoints(e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Total Points</label>
+                      <input
+                        type="number"
+                        required
+                        min="1"
+                        step="any"
+                        placeholder="e.g. 100"
+                        value={totalPoints}
+                        onChange={(e) => setTotalPoints(e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Notes (Optional)</label>
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Add any extra details..."
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600 h-20"
+                    ></textarea>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddAssignment(false)}
+                      className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Modal: Edit Assignment */}
+          {showEditAssignment && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Edit Assignment</h3>
+                <form onSubmit={handleSaveEditAssignment} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Assignment Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={assignmentName}
+                      onChange={(e) => setAssignmentName(e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Type</label>
+                      <select
+                        value={assignmentType}
+                        onChange={(e) => setAssignmentType(e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                      >
+                        <option value="Homework">Homework</option>
+                        <option value="Classwork">Classwork</option>
+                        <option value="Quiz">Quiz</option>
+                        <option value="Test">Test</option>
+                        <option value="Project">Project</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Due Date</label>
+                      <input
+                        type="date"
+                        value={dateDue}
+                        onChange={(e) => setDateDue(e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Earned Points</label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        step="any"
+                        value={earnedPoints}
+                        onChange={(e) => setEarnedPoints(e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Total Points</label>
+                      <input
+                        type="number"
+                        required
+                        min="1"
+                        step="any"
+                        value={totalPoints}
+                        onChange={(e) => setTotalPoints(e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Notes (Optional)</label>
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600 h-20"
+                    ></textarea>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditAssignment(false)}
+                      className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      );
     }
 
-    function stopRecording() {
-      document.getElementById('recIndicator').classList.remove('active');
-      if (recognition) {
-        try {
-          recognition.stop();
-        } catch (err) {}
-      }
-    }
-
-    // Bell Sound Synthesizer
-    function playBellSound() {
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 1.5);
-
-        gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        osc.start();
-        osc.stop(audioCtx.currentTime + 1.5);
-      } catch (e) {
-        console.log("Audio alert error:", e);
-      }
-    }
-
-    function escapeHtml(str) {
-      return str.replace(/"/g, '&quot;');
-    }
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
   </script>
 </body>
 </html>
