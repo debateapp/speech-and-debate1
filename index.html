@@ -1,859 +1,1462 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StudentVUE Gradebook</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- React & React DOM -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <!-- Babel Compiler for JSX -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <!-- Google Fonts & Material Icons -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-  <style>
-    body {
-      font-family: 'Roboto', sans-serif;
-      background-color: #f8f9fa;
-    }
-  </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LabelMaker - Document & Dispatch Console</title>
+    <!-- jsPDF for direct client-side PDF generation in Status Updates -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* Shared Email & App Brand Palette */
+        :root {
+            --bg-color: #f4f6f8;
+            --container-bg: #ffffff;
+            --header-bg: #1a2b4c;
+            --text-primary: #1a2b4c;
+            --text-secondary: #5a6578;
+            --border-color: #e1e4e8;
+            --accent-green: #10b981;
+            --accent-green-hover: #0d9488;
+            --input-bg: #f8fafc;
+            --danger-red: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 16px;
+            background-color: var(--bg-color);
+            color: #333333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* Screen Wrapper Management */
+        .screen {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            margin: 24px auto;
+            background-color: var(--container-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            overflow: hidden;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Brand Headers */
+        .app-header {
+            background-color: var(--header-bg);
+            padding: 32px 40px;
+            text-align: center;
+            color: #ffffff;
+            position: relative;
+        }
+
+        .app-header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .app-header .sub-greeting {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .logout-btn, .cancel-btn {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: underline;
+            padding: 8px;
+        }
+
+        .logout-btn:hover, .cancel-btn:hover {
+            color: #ffffff;
+        }
+
+        /* App Content Layouts */
+        .app-content {
+            padding: 40px;
+        }
+
+        @media (max-width: 520px) {
+            .app-header {
+                padding: 28px 20px;
+            }
+            .app-content {
+                padding: 24px 20px;
+            }
+            .logout-btn, .cancel-btn {
+                position: static;
+                transform: none;
+                display: inline-block;
+                margin-top: 12px;
+            }
+        }
+
+        /* Section Titles */
+        .section-heading {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            font-size: 13px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        /* Form styling matching original inputs */
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px 14px;
+            font-size: 14px;
+            color: #2d3748;
+            outline: none;
+            transition: border 0.2s, background-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border: 1px solid var(--header-bg);
+            background-color: #ffffff;
+        }
+
+        .two-col-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 480px) {
+            .two-col-grid {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+        }
+
+        /* Styled Action Buttons */
+        .btn {
+            width: 100%;
+            background-color: var(--header-bg);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+            border: none;
+            border-radius: 6px;
+            padding: 14px 24px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background-color: #2a437e;
+        }
+
+        .btn:active {
+            transform: scale(0.99);
+        }
+
+        .btn-accent {
+            background-color: var(--accent-green);
+        }
+
+        .btn-accent:hover {
+            background-color: var(--accent-green-hover);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px dashed var(--header-bg);
+            color: var(--header-bg);
+            margin-bottom: 20px;
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(26, 43, 76, 0.04);
+        }
+
+        .btn-ghost {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .btn-ghost:hover {
+            background-color: #edf2f7;
+        }
+
+        /* Dashboard Hub Template Cards */
+        .hub-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .hub-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px 24px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+
+        .hub-card:hover {
+            background-color: #ffffff;
+            border-color: var(--header-bg);
+            box-shadow: 0 4px 12px rgba(26, 43, 76, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .hub-card-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .hub-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            background-color: var(--header-bg);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .hub-icon.emerald {
+            background-color: var(--accent-green);
+        }
+
+        .hub-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .hub-card-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .hub-arrow {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            transition: transform 0.2s, color 0.2s;
+        }
+
+        .hub-card:hover .hub-arrow {
+            color: var(--accent-green);
+            transform: translateX(3px);
+        }
+
+        /* Dynamic Line Items Section */
+        .item-box {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .remove-item-btn {
+            background: transparent;
+            border: none;
+            color: var(--danger-red);
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            float: right;
+            margin-bottom: 10px;
+        }
+
+        /* Summary Panel block */
+        .summary-box {
+            background-color: var(--input-bg);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            padding: 18px;
+            margin-top: 24px;
+            font-size: 14px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+        }
+
+        .summary-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .summary-row.total {
+            border-top: 2px solid var(--border-color);
+            padding-top: 12px;
+            margin-top: 4px;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .summary-row.total span:last-child {
+            color: var(--accent-green);
+        }
+
+        /* Letter Template Preview & Edit Box (Status Requests) */
+        .template-preview-wrapper {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 24px;
+        }
+
+        .template-toolbar {
+            background-color: #edf2f7;
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .template-toolbar-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .edit-toggle-btn {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 5px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+
+        .edit-toggle-btn:hover {
+            border-color: var(--header-bg);
+            background-color: #f8fafc;
+        }
+
+        .edit-toggle-btn.editing-active {
+            background-color: var(--header-bg);
+            color: #ffffff;
+            border-color: var(--header-bg);
+        }
+
+        .letter-paper {
+            background-color: #ffffff;
+            padding: 24px;
+            font-size: 14px;
+            line-height: 1.65;
+            color: #2d3748;
+            white-space: pre-wrap;
+            min-height: 210px;
+            outline: none;
+            transition: box-shadow 0.2s, background-color 0.2s;
+        }
+
+        .letter-paper[contenteditable="true"] {
+            background-color: #fffbeb;
+            box-shadow: inset 0 0 0 2px #f59e0b;
+            cursor: text;
+        }
+
+        .edit-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            background-color: #f8fafc;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reset-link {
+            background: none;
+            border: none;
+            color: var(--header-bg);
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        /* Error/Success Alert Box */
+        .alert {
+            padding: 12px 14px;
+            border-radius: 6px;
+            margin-bottom: 18px;
+            font-size: 14px;
+            display: none;
+            line-height: 1.4;
+        }
+        .alert-danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .alert-success { background-color: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    </style>
 </head>
-<body class="bg-gray-100 text-gray-800 min-h-screen">
-  <div id="root"></div>
+<body>
 
-  <script type="text/babel">
-    const { useState, useEffect } = React;
-
-    // Hardcoded credentials
-    const FIXED_EMAIL = "vathukrishnaswamy@gmail.com";
-    const FIXED_PASS = "gray10Five";
-
-    // Initialize fixed account directly in localStorage
-    (function initializeDefaultAccount() {
-      const storedUsers = JSON.parse(localStorage.getItem("studentvue_users") || "{}");
-      storedUsers[FIXED_EMAIL.toLowerCase()] = { password: FIXED_PASS };
-      localStorage.setItem("studentvue_users", JSON.stringify(storedUsers));
-    })();
-
-    // Subjects with themed styles & icons
-    const SUBJECT_OPTIONS = [
-      { name: "Math", color: "bg-purple-900", icon: "calculate", bannerColor: "bg-purple-950" },
-      { name: "Science", color: "bg-red-800", icon: "science", bannerColor: "bg-red-900" },
-      { name: "Language Arts", color: "bg-sky-800", icon: "auto_stories", bannerColor: "bg-sky-900" },
-      { name: "Social Studies", color: "bg-emerald-800", icon: "public", bannerColor: "bg-emerald-900" },
-      { name: "Advisory", color: "bg-cyan-600", icon: "groups", bannerColor: "bg-cyan-700" },
-      { name: "Physical Education", color: "bg-amber-800", icon: "fitness_center", bannerColor: "bg-amber-900" },
-      { name: "SEARCH", color: "bg-rose-800", icon: "search", bannerColor: "bg-rose-900" },
-      { name: "Exploratory Wheel", color: "bg-lime-700", icon: "toys", bannerColor: "bg-lime-800" },
-      { name: "Model Engineering", color: "bg-indigo-800", icon: "precision_manufacturing", bannerColor: "bg-indigo-900" },
-      { name: "Cooking", color: "bg-orange-700", icon: "restaurant", bannerColor: "bg-orange-800" },
-      { name: "Woodshop", color: "bg-yellow-900", icon: "carpenter", bannerColor: "bg-yellow-950" },
-      { name: "Leadership", color: "bg-teal-800", icon: "military_tech", bannerColor: "bg-teal-900" },
-      { name: "Yearbook", color: "bg-fuchsia-800", icon: "photo_camera", bannerColor: "bg-fuchsia-900" },
-      { name: "Study Hall", color: "bg-slate-700", icon: "menu_book", bannerColor: "bg-slate-800" },
-      { name: "Beginning Band", color: "bg-blue-800", icon: "music_note", bannerColor: "bg-blue-900" },
-      { name: "Beginning Orchestra", color: "bg-indigo-900", icon: "music_video", bannerColor: "bg-indigo-950" },
-      { name: "Beginning Choir", color: "bg-pink-800", icon: "mic", bannerColor: "bg-pink-900" },
-      { name: "Creative Media", color: "bg-violet-800", icon: "palette", bannerColor: "bg-violet-900" },
-      { name: "Art 1", color: "bg-rose-700", icon: "brush", bannerColor: "bg-rose-800" },
-      { name: "Drama", color: "bg-amber-900", icon: "theater_comedy", bannerColor: "bg-amber-950" },
-      { name: "Forensic Science", color: "bg-neutral-800", icon: "fingerprint", bannerColor: "bg-neutral-900" },
-      { name: "ELD 1", color: "bg-sky-700", icon: "translate", bannerColor: "bg-sky-800" },
-      { name: "ELD 2", color: "bg-blue-700", icon: "translate", bannerColor: "bg-blue-800" },
-      { name: "ELD 3", color: "bg-indigo-700", icon: "translate", bannerColor: "bg-indigo-800" }
-    ];
-
-    // Grade calculation including +, -, and plain letter grades
-    function calculateGrade(assignments) {
-      if (!assignments || assignments.length === 0) return { percent: null, letter: "N/A" };
-      let totalEarned = 0;
-      let totalMax = 0;
-      assignments.forEach(a => {
-        totalEarned += Number(a.earnedPoints || 0);
-        totalMax += Number(a.totalPoints || 0);
-      });
-      if (totalMax === 0) return { percent: null, letter: "N/A" };
-      const pct = (totalEarned / totalMax) * 100;
-
-      let letter = "F";
-      if (pct >= 97) letter = "A+";
-      else if (pct >= 93) letter = "A";
-      else if (pct >= 90) letter = "A-";
-      else if (pct >= 87) letter = "B+";
-      else if (pct >= 83) letter = "B";
-      else if (pct >= 80) letter = "B-";
-      else if (pct >= 77) letter = "C+";
-      else if (pct >= 73) letter = "C";
-      else if (pct >= 70) letter = "C-";
-      else if (pct >= 67) letter = "D+";
-      else if (pct >= 63) letter = "D";
-      else if (pct >= 60) letter = "D-";
-      else letter = "F";
-
-      return { percent: pct.toFixed(1), letter };
-    }
-
-    function App() {
-      // Persistence for currently active session across refreshes
-      const [currentUser, setCurrentUser] = useState(() => {
-        return localStorage.getItem("studentvue_current_user") || null;
-      });
-
-      const [authUsername, setAuthUsername] = useState("");
-      const [authPassword, setAuthPassword] = useState("");
-      const [authError, setAuthError] = useState("");
-
-      // Persistent Gradebook Data
-      const [classes, setClasses] = useState([]);
-      const [selectedClassId, setSelectedClassId] = useState(null);
-
-      // Modals
-      const [showAddClass, setShowAddClass] = useState(false);
-      const [showEditClass, setShowEditClass] = useState(false);
-      const [showAddAssignment, setShowAddAssignment] = useState(false);
-      const [showEditAssignment, setShowEditAssignment] = useState(false);
-
-      // Form States
-      const [className, setClassName] = useState(SUBJECT_OPTIONS[0].name);
-      const [teacherName, setTeacherName] = useState("");
-      
-      const [assignmentName, setAssignmentName] = useState("");
-      const [assignmentType, setAssignmentType] = useState("Homework");
-      const [datePosted, setDatePosted] = useState("");
-      const [dateDue, setDateDue] = useState("");
-      const [earnedPoints, setEarnedPoints] = useState("");
-      const [totalPoints, setTotalPoints] = useState("");
-      const [notes, setNotes] = useState("");
-      const [editingAssignmentId, setEditingAssignmentId] = useState(null);
-
-      // Load persistent user classes whenever session updates
-      useEffect(() => {
-        if (currentUser) {
-          const storedData = localStorage.getItem(`studentvue_classes_${currentUser}`);
-          if (storedData) {
-            try {
-              setClasses(JSON.parse(storedData));
-            } catch (err) {
-              setClasses([]);
-            }
-          } else {
-            setClasses([]);
-          }
-        } else {
-          setClasses([]);
-        }
-        setSelectedClassId(null);
-      }, [currentUser]);
-
-      // Save user classes to localStorage on every change
-      useEffect(() => {
-        if (currentUser) {
-          localStorage.setItem(`studentvue_classes_${currentUser}`, JSON.stringify(classes));
-        }
-      }, [classes, currentUser]);
-
-      // Authentication Handler targeting hardcoded login
-      const handleLogin = (e) => {
-        e.preventDefault();
-        setAuthError("");
-        const usernameTrimmed = authUsername.trim().toLowerCase();
-
-        if (usernameTrimmed === FIXED_EMAIL.toLowerCase() && authPassword === FIXED_PASS) {
-          localStorage.setItem("studentvue_current_user", usernameTrimmed);
-          setCurrentUser(usernameTrimmed);
-          setAuthUsername("");
-          setAuthPassword("");
-        } else {
-          setAuthError("Invalid email or password.");
-        }
-      };
-
-      const handleLogout = () => {
-        localStorage.removeItem("studentvue_current_user");
-        setCurrentUser(null);
-      };
-
-      const activeClass = classes.find(c => c.id === selectedClassId);
-
-      // Class Handlers
-      const handleAddClass = (e) => {
-        e.preventDefault();
-        const newClass = {
-          id: Date.now().toString(),
-          name: className,
-          teacher: teacherName || "Unassigned",
-          assignments: []
-        };
-        setClasses(prev => [...prev, newClass]);
-        setTeacherName("");
-        setShowAddClass(false);
-      };
-
-      const handleOpenEditClass = (c, e) => {
-        if (e) e.stopPropagation();
-        setClassName(c.name);
-        setTeacherName(c.teacher);
-        setSelectedClassId(c.id);
-        setShowEditClass(true);
-      };
-
-      const handleSaveEditClass = (e) => {
-        e.preventDefault();
-        setClasses(prev => prev.map(c => c.id === selectedClassId ? { ...c, name: className, teacher: teacherName } : c));
-        setShowEditClass(false);
-      };
-
-      const handleDeleteClass = (id, e) => {
-        if (e) e.stopPropagation();
-        if (window.confirm("Are you sure you want to delete this class?")) {
-          setClasses(prev => prev.filter(c => c.id !== id));
-          if (selectedClassId === id) setSelectedClassId(null);
-        }
-      };
-
-      // Assignment Handlers
-      const handleAddAssignment = (e) => {
-        e.preventDefault();
-        if (!activeClass) return;
-        const newAssignment = {
-          id: Date.now().toString(),
-          name: assignmentName,
-          type: assignmentType,
-          datePosted,
-          dateDue,
-          earnedPoints: Number(earnedPoints),
-          totalPoints: Number(totalPoints),
-          notes
-        };
-        setClasses(prev => prev.map(c => {
-          if (c.id === activeClass.id) {
-            return { ...c, assignments: [newAssignment, ...c.assignments] };
-          }
-          return c;
-        }));
-        resetAssignmentForm();
-        setShowAddAssignment(false);
-      };
-
-      const handleOpenEditAssignment = (a) => {
-        setEditingAssignmentId(a.id);
-        setAssignmentName(a.name);
-        setAssignmentType(a.type);
-        setDatePosted(a.datePosted || "");
-        setDateDue(a.dateDue || "");
-        setEarnedPoints(a.earnedPoints);
-        setTotalPoints(a.totalPoints);
-        setNotes(a.notes || "");
-        setShowEditAssignment(true);
-      };
-
-      const handleSaveEditAssignment = (e) => {
-        e.preventDefault();
-        setClasses(prev => prev.map(c => {
-          if (c.id === selectedClassId) {
-            const updated = c.assignments.map(a => {
-              if (a.id === editingAssignmentId) {
-                return {
-                  ...a,
-                  name: assignmentName,
-                  type: assignmentType,
-                  datePosted,
-                  dateDue,
-                  earnedPoints: Number(earnedPoints),
-                  totalPoints: Number(totalPoints),
-                  notes
-                };
-              }
-              return a;
-            });
-            return { ...c, assignments: updated };
-          }
-          return c;
-        }));
-        resetAssignmentForm();
-        setShowEditAssignment(false);
-      };
-
-      const handleDeleteAssignment = (aId) => {
-        if (window.confirm("Are you sure you want to delete this assignment?")) {
-          setClasses(prev => prev.map(c => {
-            if (c.id === selectedClassId) {
-              return { ...c, assignments: c.assignments.filter(a => a.id !== aId) };
-            }
-            return c;
-          }));
-        }
-      };
-
-      const resetAssignmentForm = () => {
-        setAssignmentName("");
-        setAssignmentType("Homework");
-        setDatePosted("");
-        setDateDue("");
-        setEarnedPoints("");
-        setTotalPoints("");
-        setNotes("");
-        setEditingAssignmentId(null);
-      };
-
-      // LOGIN VIEW
-      if (!currentUser) {
-        return (
-          <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-            <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full border border-gray-200">
-              <div className="flex items-center justify-center space-x-2 mb-6">
-                <span className="material-symbols-outlined text-blue-600 text-4xl">school</span>
-                <h1 className="text-2xl font-bold text-gray-800">StudentVUE</h1>
-              </div>
-              <h2 className="text-lg font-medium text-gray-700 text-center mb-4">
-                Sign In to Your Account
-              </h2>
-              {authError && (
-                <div className="bg-red-50 text-red-600 text-sm p-3 rounded mb-4 border border-red-200">
-                  {authError}
-                </div>
-              )}
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="vathukrishnaswamy@gmail.com"
-                    value={authUsername}
-                    onChange={(e) => setAuthUsername(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Password</label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="Enter password"
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded text-sm transition"
-                >
-                  Log In
-                </button>
-              </form>
-            </div>
-          </div>
-        );
-      }
-
-      // MAIN APP VIEW
-      return (
-        <div className="min-h-screen bg-slate-100 flex flex-col">
-          <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
-            <div className="flex items-center space-x-3">
-              <span className="material-symbols-outlined text-blue-600 text-3xl">school</span>
-              <h1 className="text-xl font-medium text-gray-800">StudentVUE Gradebook</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm font-medium text-gray-600">
-                User: <strong className="text-gray-800">{currentUser}</strong>
-              </span>
-              <button
-                onClick={() => setShowAddClass(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 shadow-sm transition"
-              >
-                <span className="material-symbols-outlined text-sm">add</span> Add Class
-              </button>
-              <button
-                onClick={handleLogout}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-md text-sm font-medium transition flex items-center gap-1"
-                title="Log Out"
-              >
-                <span className="material-symbols-outlined text-sm">logout</span> Log Out
-              </button>
-            </div>
-          </header>
-
-          <main className="flex-1 p-6 max-w-7xl mx-auto w-full">
-            {activeClass ? (
-              <div>
-                <button
-                  onClick={() => setSelectedClassId(null)}
-                  className="mb-4 text-blue-600 hover:underline text-sm font-medium flex items-center gap-1"
-                >
-                  <span className="material-symbols-outlined text-sm">arrow_back</span> Back to Classes
-                </button>
-
-                {(() => {
-                  const subjectInfo = SUBJECT_OPTIONS.find(s => s.name === activeClass.name) || SUBJECT_OPTIONS[0];
-                  const { percent, letter } = calculateGrade(activeClass.assignments);
-                  return (
-                    <div className={`${subjectInfo.color} text-white rounded-lg shadow-md p-6 mb-6 flex justify-between items-center relative overflow-hidden`}>
-                      <span className="material-symbols-outlined absolute -right-6 -bottom-6 text-white/10 text-9xl pointer-events-none">
-                        {subjectInfo.icon}
-                      </span>
-                      <div>
-                        <h2 className="text-2xl font-bold">{activeClass.name}</h2>
-                        <p className="text-sm opacity-90">Teacher: {activeClass.teacher}</p>
-                      </div>
-                      <div className="text-right flex items-center gap-6">
-                        <div>
-                          <div className="text-3xl font-extrabold">{letter}</div>
-                          <div className="text-sm opacity-90">{percent ? `${percent}%` : "No Grade"}</div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={(e) => handleOpenEditClass(activeClass, e)}
-                            className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition"
-                            title="Edit Class"
-                          >
-                            <span className="material-symbols-outlined text-sm">edit</span>
-                          </button>
-                          <button
-                            onClick={(e) => handleDeleteClass(activeClass.id, e)}
-                            className="bg-red-500/80 hover:bg-red-600 text-white p-2 rounded-full transition"
-                            title="Delete Class"
-                          >
-                            <span className="material-symbols-outlined text-sm">delete</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-gray-700">Assignments</h3>
-                  <button
-                    onClick={() => setShowAddAssignment(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-1 transition shadow-sm"
-                  >
-                    <span className="material-symbols-outlined text-sm">add</span> Add Assignment
-                  </button>
-                </div>
-
-                {activeClass.assignments.length === 0 ? (
-                  <div className="bg-white rounded-lg p-12 text-center text-gray-500 border border-gray-200">
-                    <span className="material-symbols-outlined text-5xl mb-2 text-gray-300">assignment</span>
-                    <p>No assignments added yet. Click "+ Add Assignment" to get started.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {activeClass.assignments.map((a) => {
-                      const pct = a.totalPoints > 0 ? (a.earnedPoints / a.totalPoints) * 100 : 0;
-                      return (
-                        <div key={a.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm flex items-center justify-between hover:border-gray-300 transition">
-                          <div className="flex items-center gap-4 flex-1">
-                            <div className="bg-gray-100 text-gray-600 px-3 py-2 rounded text-center min-w-[80px]">
-                              <div className="text-[10px] uppercase tracking-wider font-semibold">Due</div>
-                              <div className="text-xs font-bold">{a.dateDue || "N/A"}</div>
-                            </div>
-                            
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-semibold text-gray-800">{a.name}</h4>
-                                <span className="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded border border-blue-200 font-medium">{a.type}</span>
-                              </div>
-                              <p className="text-xs text-gray-500 mt-1">{a.earnedPoints} out of {a.totalPoints} pts</p>
-                              <div className="w-full bg-gray-200 h-2 rounded-full mt-2 overflow-hidden max-w-md">
-                                <div className="bg-emerald-600 h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%` }}></div>
-                              </div>
-                              {a.notes && <p className="text-xs text-gray-500 italic mt-2">Note: {a.notes}</p>}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-4 ml-4">
-                            <div className="bg-emerald-700 text-white px-4 py-2 rounded text-center min-w-[70px]">
-                              <div className="text-lg font-bold">{a.earnedPoints}</div>
-                              <div className="text-[10px] opacity-80">Max {a.totalPoints}</div>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <button
-                                onClick={() => handleOpenEditAssignment(a)}
-                                className="text-gray-400 hover:text-blue-600 p-1"
-                                title="Edit Assignment"
-                              >
-                                <span className="material-symbols-outlined text-sm">edit</span>
-                              </button>
-                              <button
-                                onClick={() => handleDeleteAssignment(a.id)}
-                                className="text-gray-400 hover:text-red-600 p-1"
-                                title="Delete Assignment"
-                              >
-                                <span className="material-symbols-outlined text-sm">delete</span>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div>
-                {classes.length === 0 ? (
-                  <div className="bg-white rounded-lg p-16 text-center border border-gray-200 max-w-xl mx-auto my-12">
-                    <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">class</span>
-                    <h2 className="text-xl font-medium text-gray-700 mb-2">No Classes Added Yet</h2>
-                    <p className="text-gray-500 mb-6 text-sm">Start building your StudentVUE schedule by adding your first class.</p>
-                    <button
-                      onClick={() => setShowAddClass(true)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-md font-medium inline-flex items-center gap-2 shadow-sm transition"
-                    >
-                      <span className="material-symbols-outlined">add</span> Add Your First Class
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {classes.map((c, index) => {
-                      const subjectInfo = SUBJECT_OPTIONS.find(s => s.name === c.name) || SUBJECT_OPTIONS[0];
-                      const { percent, letter } = calculateGrade(c.assignments);
-                      return (
-                        <div
-                          key={c.id}
-                          onClick={() => setSelectedClassId(c.id)}
-                          className={`${subjectInfo.color} text-white rounded-lg shadow cursor-pointer transition transform hover:-translate-y-1 hover:shadow-lg relative overflow-hidden flex flex-col justify-between h-36`}
-                        >
-                          <div className={`${subjectInfo.bannerColor} px-3 py-1.5 flex justify-between items-center text-xs border-b border-white/10`}>
-                            <span className="font-semibold truncate">{index + 1}: {c.name}</span>
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={(e) => handleOpenEditClass(c, e)}
-                                className="p-1 hover:bg-white/20 rounded transition"
-                                title="Edit Class"
-                              >
-                                <span className="material-symbols-outlined text-xs">edit</span>
-                              </button>
-                              <button
-                                onClick={(e) => handleDeleteClass(c.id, e)}
-                                className="p-1 hover:bg-red-500/50 rounded transition"
-                                title="Delete Class"
-                              >
-                                <span className="material-symbols-outlined text-xs">delete</span>
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="p-4 flex justify-between items-center relative z-10">
-                            <span className="text-5xl font-extrabold">{letter}</span>
-                            <span className="text-xl font-medium">{percent ? `${percent}%` : "N/A"}</span>
-                          </div>
-
-                          <span className="material-symbols-outlined absolute right-2 bottom-0 text-white/10 text-8xl pointer-events-none">
-                            {subjectInfo.icon}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-          </main>
-
-          {/* Modal: Add Class */}
-          {showAddClass && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
-                <h3 className="text-lg font-medium text-gray-800 mb-4">Add Class</h3>
-                <form onSubmit={handleAddClass} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Class Name</label>
-                    <select
-                      value={className}
-                      onChange={(e) => setClassName(e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                    >
-                      {SUBJECT_OPTIONS.map((s) => (
-                        <option key={s.name} value={s.name}>{s.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Teacher Name</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Mr. Smith"
-                      value={teacherName}
-                      onChange={(e) => setTeacherName(e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowAddClass(false)}
-                      className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* Modal: Edit Class */}
-          {showEditClass && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
-                <h3 className="text-lg font-medium text-gray-800 mb-4">Edit Class</h3>
-                <form onSubmit={handleSaveEditClass} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Class Name</label>
-                    <select
-                      value={className}
-                      onChange={(e) => setClassName(e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                    >
-                      {SUBJECT_OPTIONS.map((s) => (
-                        <option key={s.name} value={s.name}>{s.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Teacher Name</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Mr. Smith"
-                      value={teacherName}
-                      onChange={(e) => setTeacherName(e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowEditClass(false)}
-                      className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-                    >
-                      Update Class
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* Modal: Add Assignment */}
-          {showAddAssignment && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-                <h3 className="text-lg font-medium text-gray-800 mb-4">Add Assignment</h3>
-                <form onSubmit={handleAddAssignment} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Assignment Name</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Midterm Exam"
-                      value={assignmentName}
-                      onChange={(e) => setAssignmentName(e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Type</label>
-                      <select
-                        value={assignmentType}
-                        onChange={(e) => setAssignmentType(e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                      >
-                        <option value="Homework">Homework</option>
-                        <option value="Classwork">Classwork</option>
-                        <option value="Quiz">Quiz</option>
-                        <option value="Test">Test</option>
-                        <option value="Project">Project</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Due Date</label>
-                      <input
-                        type="date"
-                        value={dateDue}
-                        onChange={(e) => setDateDue(e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Earned Points</label>
-                      <input
-                        type="number"
-                        required
-                        min="0"
-                        step="any"
-                        placeholder="e.g. 95"
-                        value={earnedPoints}
-                        onChange={(e) => setEarnedPoints(e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Total Points</label>
-                      <input
-                        type="number"
-                        required
-                        min="1"
-                        step="any"
-                        placeholder="e.g. 100"
-                        value={totalPoints}
-                        onChange={(e) => setTotalPoints(e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Notes (Optional)</label>
-                    <textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Add any extra details..."
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600 h-20"
-                    ></textarea>
-                  </div>
-                  <div className="flex justify-end gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowAddAssignment(false)}
-                      className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-                    >
-                      Add
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* Modal: Edit Assignment */}
-          {showEditAssignment && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-                <h3 className="text-lg font-medium text-gray-800 mb-4">Edit Assignment</h3>
-                <form onSubmit={handleSaveEditAssignment} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Assignment Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={assignmentName}
-                      onChange={(e) => setAssignmentName(e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Type</label>
-                      <select
-                        value={assignmentType}
-                        onChange={(e) => setAssignmentType(e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                      >
-                        <option value="Homework">Homework</option>
-                        <option value="Classwork">Classwork</option>
-                        <option value="Quiz">Quiz</option>
-                        <option value="Test">Test</option>
-                        <option value="Project">Project</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Due Date</label>
-                      <input
-                        type="date"
-                        value={dateDue}
-                        onChange={(e) => setDateDue(e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Earned Points</label>
-                      <input
-                        type="number"
-                        required
-                        min="0"
-                        step="any"
-                        value={earnedPoints}
-                        onChange={(e) => setEarnedPoints(e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Total Points</label>
-                      <input
-                        type="number"
-                        required
-                        min="1"
-                        step="any"
-                        value={totalPoints}
-                        onChange={(e) => setTotalPoints(e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Notes (Optional)</label>
-                    <textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600 h-20"
-                    ></textarea>
-                  </div>
-                  <div className="flex justify-end gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowEditAssignment(false)}
-                      className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-                    >
-                      Save Changes
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
+    <!-- 1. LOGIN SCREEN -->
+    <div id="loginScreen" class="screen active">
+        <div class="app-header">
+            <h1>LabelMaker</h1>
+            <div class="sub-greeting">Sign in to your document dispatcher console</div>
         </div>
-      );
-    }
+        <div class="app-content">
+            <div id="loginAlert" class="alert alert-danger">Invalid credentials. Please try again or use Demo Login.</div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="email" id="username" placeholder="johndoe@gmail.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="••••••••••••" onkeydown="if(event.key==='Enter') handleLogin()">
+            </div>
+            <button class="btn" onclick="handleLogin()">Log In</button>
+            <button class="btn btn-ghost" onclick="handleDemoLogin()">Quick Demo Login</button>
+        </div>
+    </div>
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
+    <!-- 2. DASHBOARD HUB SCREEN -->
+    <div id="dashboardScreen" class="screen">
+        <div class="app-header">
+            <h1 id="welcomeMessage">LabelMaker</h1>
+            <div class="sub-greeting">Welcome Varun • Select a Template Workflow</div>
+            <button class="logout-btn" onclick="switchScreen('loginScreen')">Logout</button>
+        </div>
+        <div class="app-content">
+            <div class="section-heading">Available Templates</div>
+            <div class="hub-grid">
+                <!-- Template 1: Receipt -->
+                <button class="hub-card" onclick="switchScreen('receiptScreen')">
+                    <div class="hub-card-left">
+                        <div class="hub-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/>
+                                <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
+                                <path d="M12 17V7"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="hub-card-title">Receipt</div>
+                            <div class="hub-card-desc">Itemized customer invoice, discounts, tax &amp; HTML email receipt</div>
+                        </div>
+                    </div>
+                    <span class="hub-arrow">&rarr;</span>
+                </button>
+
+                <!-- Template 2: Quiz Score -->
+                <button class="hub-card" onclick="switchScreen('quizScreen')">
+                    <div class="hub-card-left">
+                        <div class="hub-icon emerald">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                                <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="hub-card-title">Quiz Score</div>
+                            <div class="hub-card-desc">Score calculator, automatic letter grade &amp; formatted score report</div>
+                        </div>
+                    </div>
+                    <span class="hub-arrow">&rarr;</span>
+                </button>
+
+                <!-- Template 3: Status Requests -->
+                <button class="hub-card" onclick="switchScreen('statusScreen')">
+                    <div class="hub-card-left">
+                        <div class="hub-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                <polyline points="10 9 9 9 8 9"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="hub-card-title">Status Requests</div>
+                            <div class="hub-card-desc">Accept/Deny decision letter with live template editor &amp; PDF export</div>
+                        </div>
+                    </div>
+                    <span class="hub-arrow">&rarr;</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MODULE 1: RECEIPT SCREEN -->
+    <div id="receiptScreen" class="screen">
+        <div class="app-header">
+            <h1>Receipt Generator</h1>
+            <div class="sub-greeting">Customer Transaction &amp; Invoice Dispatch</div>
+            <button class="cancel-btn" onclick="switchScreen('dashboardScreen')">&larr; Back</button>
+        </div>
+        <div class="app-content">
+            <div id="receiptAlert" class="alert alert-danger"></div>
+            <div id="receiptSuccess" class="alert alert-success"></div>
+
+            <div class="section-heading">Customer Profile</div>
+            <div class="form-group">
+                <label>Customer Name</label>
+                <input type="text" id="custName" placeholder="John Doe">
+            </div>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="custEmail" placeholder="customer@example.com">
+            </div>
+
+            <div class="section-heading" style="margin-top: 32px;">Line Items</div>
+            <div id="itemsContainer"></div>
+            <button class="btn btn-secondary" onclick="addItemRow()">＋ Add New Item</button>
+
+            <div class="section-heading" style="margin-top: 16px;">Discounts &amp; Vouchers</div>
+            <div class="form-group">
+                <label>Discount Type</label>
+                <select id="discountType" onchange="toggleDiscountValueVisibility()">
+                    <option value="None">No Discount</option>
+                    <option value="Giftcard">Giftcard</option>
+                    <option value="Family Legacy">Family Legacy</option>
+                </select>
+            </div>
+            <div class="form-group" id="discountValueGroup" style="display: none;">
+                <label>Discount Value Amount ($)</label>
+                <input type="number" id="discountValue" value="0.00" step="0.01" min="0" oninput="calculateTotals()">
+            </div>
+
+            <div class="section-heading" style="margin-top: 32px;">Tax Configuration</div>
+            <div class="form-group">
+                <label>Tax Rate (%)</label>
+                <input type="number" id="taxRate" value="8.25" step="0.01" min="0" oninput="calculateTotals()">
+            </div>
+
+            <div class="summary-box">
+                <div class="summary-row"><span>Subtotal:</span><span id="lblSubtotal">$0.00</span></div>
+                <div class="summary-row"><span>Deductions:</span><span id="lblDiscount">-$0.00</span></div>
+                <div class="summary-row"><span>Calculated Tax:</span><span id="lblTax">$0.00</span></div>
+                <div class="summary-row total"><span>Total Balance:</span><span id="lblTotal">$0.00</span></div>
+            </div>
+
+            <button class="btn btn-accent" style="margin-top: 24px;" onclick="handleSendReceiptEmail()">✉ Send Email &amp; Download Receipt</button>
+        </div>
+    </div>
+
+    <!-- 4. MODULE 2: QUIZ SCORE SCREEN -->
+    <div id="quizScreen" class="screen">
+        <div class="app-header">
+            <h1>Quiz Score Report</h1>
+            <div class="sub-greeting">Automated Grading &amp; Transcript Dispatch</div>
+            <button class="cancel-btn" onclick="switchScreen('dashboardScreen')">&larr; Back</button>
+        </div>
+        <div class="app-content">
+            <div id="quizAlert" class="alert alert-danger"></div>
+            <div id="quizSuccess" class="alert alert-success"></div>
+
+            <div class="section-heading">Examinee &amp; Assessment Details</div>
+            <div class="form-group">
+                <label>Name of Person Taking the Quiz</label>
+                <input type="text" id="quizStudentName" placeholder="Jane Smith">
+            </div>
+
+            <div class="form-group">
+                <label>Recipient Email Address (Optional)</label>
+                <input type="email" id="quizStudentEmail" placeholder="student@example.com">
+            </div>
+
+            <div class="two-col-grid">
+                <div class="form-group">
+                    <label>Date Taken</label>
+                    <input type="date" id="quizDate">
+                </div>
+                <div class="form-group">
+                    <label>Quiz Name</label>
+                    <input type="text" id="quizName" placeholder="e.g. Midterm Calculus Quiz">
+                </div>
+            </div>
+
+            <div class="section-heading" style="margin-top: 12px;">Score Entry (Numbers Only)</div>
+            <div class="two-col-grid">
+                <div class="form-group">
+                    <label>Score Earned</label>
+                    <input type="text" inputmode="decimal" id="quizScoreEarned" placeholder="e.g. 92" oninput="sanitizeAndCalculateQuiz(this)">
+                </div>
+                <div class="form-group">
+                    <label>Total Possible Points</label>
+                    <input type="text" inputmode="decimal" id="quizMaxScore" value="100" placeholder="100" oninput="sanitizeAndCalculateQuiz(this)">
+                </div>
+            </div>
+
+            <!-- Live Grade Summary Box matching Receipt aesthetics -->
+            <div class="summary-box">
+                <div class="summary-row"><span>Recorded Score:</span><span id="lblQuizRawScore">0 / 100</span></div>
+                <div class="summary-row"><span>Percentage:</span><span id="lblQuizPercent">0.0%</span></div>
+                <div class="summary-row"><span>Grading Scale:</span><span id="lblQuizStatus">Pending Score</span></div>
+                <div class="summary-row total"><span>Calculated Letter Grade:</span><span id="lblQuizGrade">—</span></div>
+            </div>
+
+            <button class="btn btn-accent" style="margin-top: 24px;" onclick="handleSendQuizEmail()">✉ Send Email &amp; Download Report</button>
+        </div>
+    </div>
+
+    <!-- 5. MODULE 3: STATUS UPDATES (STATUS REQUESTS) SCREEN -->
+    <div id="statusScreen" class="screen">
+        <div class="app-header">
+            <h1>Status Requests</h1>
+            <div class="sub-greeting">Official Admission &amp; Decision Letter Generator</div>
+            <button class="cancel-btn" onclick="switchScreen('dashboardScreen')">&larr; Back</button>
+        </div>
+        <div class="app-content">
+            <div id="statusAlert" class="alert alert-danger"></div>
+            <div id="statusSuccess" class="alert alert-success"></div>
+
+            <div class="section-heading">Decision Parameters</div>
+            <div class="form-group">
+                <label>Application Decision Status</label>
+                <select id="statusDecision" onchange="handleStatusFieldChange()">
+                    <option value="admitted">Admitted / Accepted</option>
+                    <option value="denied">Denied / Rejected</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Name of Person</label>
+                <input type="text" id="statusPersonName" placeholder="e.g. Alex Johnson" oninput="handleStatusFieldChange()">
+            </div>
+
+            <div class="form-group">
+                <label>Position or Application Subject</label>
+                <input type="text" id="statusPosition" placeholder="e.g. College Application or Junior Analyst" oninput="handleStatusFieldChange()">
+            </div>
+
+            <!-- Live Letter Preview & Edit Box right above the Generate button -->
+            <div class="template-preview-wrapper">
+                <div class="template-toolbar">
+                    <span class="template-toolbar-label">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        Official Letter Template
+                    </span>
+                    <button type="button" id="toggleEditLetterBtn" class="edit-toggle-btn" onclick="toggleLetterEditMode()">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                        <span id="editBtnLabel">Edit</span>
+                    </button>
+                </div>
+
+                <div id="letterEditor" class="letter-paper" contenteditable="false" oninput="markLetterManuallyEdited()"></div>
+
+                <div class="edit-hint">
+                    <span id="editModeStatusText">Click <strong>Edit</strong> to customize the letter text directly.</span>
+                    <button type="button" class="reset-link" onclick="resetLetterTemplate()">Reset Default</button>
+                </div>
+            </div>
+
+            <button class="btn btn-accent" style="margin-top: 24px;" onclick="handleGenerateStatusLetter()">
+                📄 Generate &amp; Download Letter (PDF &amp; Email)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================================================
+           GLOBAL NAVIGATION & AUTHENTICATION
+           ========================================================================== */
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (screenId === 'receiptScreen') {
+                resetReceiptForm();
+            } else if (screenId === 'quizScreen') {
+                resetQuizForm();
+            } else if (screenId === 'statusScreen') {
+                resetStatusForm();
+            }
+        }
+
+        function handleLogin() {
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value;
+            const alertBox = document.getElementById('loginAlert');
+
+            if (u === "vathukrishnaswamy@gmail.com" && p === "gray10Five") {
+                alertBox.style.display = 'none';
+                switchScreen('dashboardScreen');
+            } else {
+                alertBox.style.display = 'block';
+            }
+        }
+
+        function handleDemoLogin() {
+            document.getElementById('username').value = "vathukrishnaswamy@gmail.com";
+            document.getElementById('password').value = "gray10Five";
+            document.getElementById('loginAlert').style.display = 'none';
+            switchScreen('dashboardScreen');
+        }
+
+        function triggerFileDownload(blob, filename) {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        /* ==========================================================================
+           MODULE 1: RECEIPT GENERATOR
+           ========================================================================== */
+        let itemCount = 0;
+        let financialData = { subtotal: 0, discount: 0, tax: 0, total: 0 };
+
+        function resetReceiptForm() {
+            document.getElementById('itemsContainer').innerHTML = '';
+            document.getElementById('custName').value = '';
+            document.getElementById('custEmail').value = '';
+            document.getElementById('discountType').value = 'None';
+            document.getElementById('discountValue').value = '0.00';
+            document.getElementById('discountValueGroup').style.display = 'none';
+            document.getElementById('taxRate').value = '8.25';
+            document.getElementById('receiptAlert').style.display = 'none';
+            document.getElementById('receiptSuccess').style.display = 'none';
+            itemCount = 0;
+            addItemRow();
+        }
+
+        function addItemRow() {
+            itemCount++;
+            const container = document.getElementById('itemsContainer');
+            const row = document.createElement('div');
+            row.className = 'item-box';
+            row.id = `itemRow_${itemCount}`;
+            row.innerHTML = `
+                <button type="button" class="remove-item-btn" onclick="removeItemRow('${row.id}')">Remove Item</button>
+                <div class="form-group">
+                    <label>Item Title</label>
+                    <input type="text" class="item-title" placeholder="e.g. Premium Service Plan">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" class="item-desc" placeholder="e.g. Color, Size, or License Tier Metadata">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Cost ($)</label>
+                    <input type="number" class="item-cost" value="0.00" step="0.01" min="0" oninput="calculateTotals()">
+                </div>
+            `;
+            container.appendChild(row);
+            calculateTotals();
+        }
+
+        function removeItemRow(id) {
+            const row = document.getElementById(id);
+            if (row) {
+                row.remove();
+                calculateTotals();
+            }
+        }
+
+        function toggleDiscountValueVisibility() {
+            const type = document.getElementById('discountType').value;
+            const block = document.getElementById('discountValueGroup');
+            if (type === 'None') {
+                block.style.display = 'none';
+                document.getElementById('discountValue').value = '0.00';
+            } else {
+                block.style.display = 'block';
+            }
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            let subtotal = 0;
+            document.querySelectorAll('.item-cost').forEach(input => {
+                subtotal += parseFloat(input.value) || 0;
+            });
+
+            const discount = parseFloat(document.getElementById('discountValue').value) || 0;
+            const baseTaxable = Math.max(0, subtotal - discount);
+            const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+            const tax = baseTaxable * (taxRate / 100);
+            const total = baseTaxable + tax;
+
+            financialData = { subtotal, discount, tax, total };
+
+            document.getElementById('lblSubtotal').innerText = `$${subtotal.toFixed(2)}`;
+            document.getElementById('lblDiscount').innerText = `-$${discount.toFixed(2)}`;
+            document.getElementById('lblTax').innerText = `$${tax.toFixed(2)}`;
+            document.getElementById('lblTotal').innerText = `$${total.toFixed(2)}`;
+        }
+
+        function handleSendReceiptEmail() {
+            const name = document.getElementById('custName').value.trim();
+            const email = document.getElementById('custEmail').value.trim();
+            const errBox = document.getElementById('receiptAlert');
+            const successBox = document.getElementById('receiptSuccess');
+
+            errBox.style.display = 'none';
+            successBox.style.display = 'none';
+
+            if (!name || !email) {
+                errBox.innerText = "Please complete the customer name and email address before dispatching.";
+                errBox.style.display = 'block';
+                return;
+            }
+
+            let itemsArray = [];
+            document.querySelectorAll('.item-box').forEach(box => {
+                const title = box.querySelector('.item-title').value.trim() || "Standard Item Line";
+                const desc = box.querySelector('.item-desc').value.trim() || "No additional parameters.";
+                const cost = parseFloat(box.querySelector('.item-cost').value) || 0;
+                itemsArray.push({ title, desc, cost });
+            });
+
+            if (itemsArray.length === 0) {
+                errBox.innerText = "Please include at least one transaction item row.";
+                errBox.style.display = 'block';
+                return;
+            }
+
+            let rowsHtml = '';
+            itemsArray.forEach(item => {
+                rowsHtml += `
+                <tr>
+                    <td style="padding: 16px 0; border-bottom: 1px solid #edf2f7; font-size: 15px; color: #2d3748; vertical-align: top;">
+                        <div style="font-weight: 600; color: #1a2b4c;">${escapeHtml(item.title)}</div>
+                        <div style="font-size: 13px; color: #718096; margin-top: 4px;">${escapeHtml(item.desc)}</div>
+                    </td>
+                    <td style="padding: 16px 0; border-bottom: 1px solid #edf2f7; font-size: 15px; color: #2d3748; vertical-align: top; text-align: center; font-weight: 500;">1</td>
+                    <td style="padding: 16px 0; border-bottom: 1px solid #edf2f7; font-size: 15px; color: #2d3748; vertical-align: top; text-align: right; font-weight: 500;">$${item.cost.toFixed(2)}</td>
+                </tr>`;
+            });
+
+            const discType = document.getElementById('discountType').value;
+            let discountBlockHtml = '';
+            if (discType !== 'None' && financialData.discount > 0) {
+                discountBlockHtml = `
+                <div style="background: linear-gradient(135deg, #1a2b4c 0%, #2a437e 100%); padding: 24px; border-radius: 8px; color: #ffffff; margin-bottom: 32px; box-shadow: 0 4px 10px rgba(26,43,76,0.15);">
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #10b981; margin-bottom: 8px;">Your Active Bonus (${escapeHtml(discType)})</div>
+                    <p style="font-size: 14px; line-height: 1.5; color: #e2e8f0; margin: 0 0 16px 0;">Enjoy your discount value code sequence with your transaction balance sequence:</p>
+                    <div style="background-color: rgba(255,255,255,0.12); border: 1px dashed rgba(255,255,255,0.25); border-radius: 6px; padding: 12px; text-align: center; font-family: monospace; font-size: 18px; font-weight: 700; letter-spacing: 2px; color: #ffffff;">REWARD-${financialData.discount.toFixed(0)}-2026</div>
+                </div>`;
+            }
+
+            const orderNum = Math.floor(10000 + Math.random() * 90000);
+            const compiledReceiptHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Receipt - ${escapeHtml(name)}</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #333333; }
+    </style>
+</head>
+<body>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f8; padding: 40px 0; width: 100%; table-layout: fixed;">
+        <tr>
+            <td align="center">
+                <table width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e1e4e8; overflow: hidden;" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="background-color: #1a2b4c; padding: 32px 40px; text-align: center;">
+                            <span style="font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">LabelMaker</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h1 style="font-size: 18px; font-weight: 600; margin: 0 0 12px 0; color: #1a2b4c;">Hi ${escapeHtml(name)},</h1>
+                            <p style="font-size: 15px; line-height: 1.6; color: #5a6578; margin: 0 0 32px 0;">Thanks for your order! We've received your payment validation sequences. Below you'll find your calculated receipt summary details.</p>
+                            
+                            ${discountBlockHtml}
+
+                            <table style="width: 100%; margin-bottom: 32px; background-color: #f8fafc; border-radius: 6px; border: 1px solid #edf2f7;" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="padding: 16px 20px; font-size: 14px; line-height: 1.5; color: #4a5568;" width="50%">
+                                        <div style="font-size: 12px; text-transform: uppercase; color: #718096; font-weight: 600;">Order Code</div>
+                                        <div style="font-weight: 500; color: #1a2b4c;">#ORD-${orderNum}</div>
+                                    </td>
+                                    <td style="padding: 16px 20px; font-size: 14px; line-height: 1.5; color: #4a5568;" width="50%">
+                                        <div style="font-size: 12px; text-transform: uppercase; color: #718096; font-weight: 600;">Recipient Email</div>
+                                        <div style="font-weight: 500; color: #1a2b4c;">${escapeHtml(email)}</div>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px;">
+                               <thead>
+                                    <tr>
+                                        <th style="padding: 12px 0; border-bottom: 2px solid #edf2f7; font-size: 12px; text-transform: uppercase; color: #718096; text-align: left;">Item Description</th>
+                                        <th style="padding: 12px 0; border-bottom: 2px solid #edf2f7; font-size: 12px; text-transform: uppercase; color: #718096; text-align: center;">Qty</th>
+                                        <th style="padding: 12px 0; border-bottom: 2px solid #edf2f7; font-size: 12px; text-transform: uppercase; color: #718096; text-align: right;">Price</th>
+                                    </tr>
+                               </thead>
+                               <tbody>
+                                    ${rowsHtml}
+                               </tbody>
+                            </table>
+
+                            <table style="width: 100%; margin-bottom: 16px;" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="padding: 6px 0; font-size: 14px; color: #718096; text-align: right; width: 80%;">Subtotal</td>
+                                    <td style="padding: 6px 0; font-size: 14px; color: #2d3748; text-align: right; font-weight: 500;">$${financialData.subtotal.toFixed(2)}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 6px 0; font-size: 14px; color: #718096; text-align: right;">Deductions (${escapeHtml(discType)})</td>
+                                    <td style="padding: 6px 0; font-size: 14px; color: #ef4444; text-align: right; font-weight: 500;">-$${financialData.discount.toFixed(2)}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 6px 0; font-size: 14px; color: #718096; text-align: right;">Tax</td>
+                                    <td style="padding: 6px 0; font-size: 14px; color: #2d3748; text-align: right; font-weight: 500;">$${financialData.tax.toFixed(2)}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #1a2b4c; text-align: right; border-top: 2px solid #edf2f7;">Total Settled</td>
+                                    <td style="padding: 16px 0; font-size: 20px; font-weight: 700; color: #10b981; text-align: right; border-top: 2px solid #edf2f7;">$${financialData.total.toFixed(2)}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>`;
+
+            const blob = new Blob([compiledReceiptHtml], { type: 'text/html' });
+            triggerFileDownload(blob, `receipt_${name.replace(/\s+/g, '_')}.html`);
+
+            successBox.innerText = `Receipt compiled and downloaded! Ready for dispatch to ${email}.`;
+            successBox.style.display = 'block';
+        }
+
+        /* ==========================================================================
+           MODULE 2: QUIZ SCORE REPORT
+           ========================================================================== */
+        let quizCalcData = { earned: 0, max: 100, percent: 0, grade: '—', standing: 'Pending Score' };
+
+        function resetQuizForm() {
+            document.getElementById('quizStudentName').value = '';
+            document.getElementById('quizStudentEmail').value = '';
+            // Set today's date in YYYY-MM-DD format for the date picker
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('quizDate').value = today;
+            document.getElementById('quizName').value = '';
+            document.getElementById('quizScoreEarned').value = '';
+            document.getElementById('quizMaxScore').value = '100';
+            document.getElementById('quizAlert').style.display = 'none';
+            document.getElementById('quizSuccess').style.display = 'none';
+            calculateQuizGrade();
+        }
+
+        // Enforce strictly numbers and at most one decimal point (no letters allowed)
+        function sanitizeAndCalculateQuiz(inputEl) {
+            let val = inputEl.value.replace(/[^0-9.]/g, '');
+            const parts = val.split('.');
+            if (parts.length > 2) {
+                val = parts[0] + '.' + parts.slice(1).join('');
+            }
+            inputEl.value = val;
+            calculateQuizGrade();
+        }
+
+        function computeLetterGrade(percent) {
+            if (percent >= 97) return { grade: 'A+', standing: 'Distinction (97–100%)' };
+            if (percent >= 93) return { grade: 'A',  standing: 'Excellent (93–96%)' };
+            if (percent >= 90) return { grade: 'A-', standing: 'Strong Mastery (90–92%)' };
+            if (percent >= 87) return { grade: 'B+', standing: 'Above Average (87–89%)' };
+            if (percent >= 83) return { grade: 'B',  standing: 'Proficient (83–86%)' };
+            if (percent >= 80) return { grade: 'B-', standing: 'Solid Effort (80–82%)' };
+            if (percent >= 77) return { grade: 'C+', standing: 'Satisfactory (77–79%)' };
+            if (percent >= 73) return { grade: 'C',  standing: 'Competent (73–76%)' };
+            if (percent >= 70) return { grade: 'C-', standing: 'Passing (70–72%)' };
+            if (percent >= 60) return { grade: 'D',  standing: 'Below Standard (60–69%)' };
+            return { grade: 'F', standing: 'Needs Review (<60%)' };
+        }
+
+        function calculateQuizGrade() {
+            const rawEarnedStr = document.getElementById('quizScoreEarned').value.trim();
+            const rawMaxStr = document.getElementById('quizMaxScore').value.trim();
+
+            const earned = parseFloat(rawEarnedStr);
+            const max = parseFloat(rawMaxStr);
+
+            if (rawEarnedStr === '' || isNaN(earned) || isNaN(max) || max <= 0) {
+                quizCalcData = { earned: 0, max: isNaN(max) ? 100 : max, percent: 0, grade: '—', standing: 'Awaiting Score' };
+                document.getElementById('lblQuizRawScore').innerText = `0 / ${isNaN(max) ? 100 : max}`;
+                document.getElementById('lblQuizPercent').innerText = '0.0%';
+                document.getElementById('lblQuizStatus').innerText = 'Awaiting Score';
+                document.getElementById('lblQuizGrade').innerText = '—';
+                return;
+            }
+
+            const percent = (earned / max) * 100;
+            const { grade, standing } = computeLetterGrade(percent);
+
+            quizCalcData = { earned, max, percent, grade, standing };
+
+            document.getElementById('lblQuizRawScore').innerText = `${earned} / ${max}`;
+            document.getElementById('lblQuizPercent').innerText = `${percent.toFixed(1)}%`;
+            document.getElementById('lblQuizStatus').innerText = standing;
+            document.getElementById('lblQuizGrade').innerText = grade;
+        }
+
+        function handleSendQuizEmail() {
+            const studentName = document.getElementById('quizStudentName').value.trim();
+            const studentEmail = document.getElementById('quizStudentEmail').value.trim() || 'student@labelmaker.portal';
+            const quizDate = document.getElementById('quizDate').value;
+            const quizName = document.getElementById('quizName').value.trim();
+            const rawEarnedStr = document.getElementById('quizScoreEarned').value.trim();
+
+            const errBox = document.getElementById('quizAlert');
+            const successBox = document.getElementById('quizSuccess');
+            errBox.style.display = 'none';
+            successBox.style.display = 'none';
+
+            if (!studentName || !quizDate || !quizName || rawEarnedStr === '') {
+                errBox.innerText = "Please fill in the person's name, date, quiz name, and numeric score.";
+                errBox.style.display = 'block';
+                return;
+            }
+
+            if (quizCalcData.max <= 0) {
+                errBox.innerText = "Total possible points must be greater than 0.";
+                errBox.style.display = 'block';
+                return;
+            }
+
+            const gradeBadgeColor = quizCalcData.percent >= 70 ? '#10b981' : '#ef4444';
+            const transcriptCode = `QZ-${Math.floor(10000 + Math.random() * 90000)}`;
+
+            // Styled in the EXACT same table/card format as the Receipt template
+            const compiledQuizHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Quiz Score Report - ${escapeHtml(studentName)}</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #333333; }
+    </style>
+</head>
+<body>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f8; padding: 40px 0; width: 100%; table-layout: fixed;">
+        <tr>
+            <td align="center">
+                <table width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e1e4e8; overflow: hidden;" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="background-color: #1a2b4c; padding: 32px 40px; text-align: center;">
+                            <span style="font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">LabelMaker</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h1 style="font-size: 18px; font-weight: 600; margin: 0 0 12px 0; color: #1a2b4c;">Hi ${escapeHtml(studentName)},</h1>
+                            <p style="font-size: 15px; line-height: 1.6; color: #5a6578; margin: 0 0 32px 0;">Your quiz assessment has been graded and recorded. Below you'll find your official score breakdown and calculated letter grade.</p>
+
+                            <!-- Highlight Banner matching Receipt Bonus Card -->
+                            <div style="background: linear-gradient(135deg, #1a2b4c 0%, #2a437e 100%); padding: 24px; border-radius: 8px; color: #ffffff; margin-bottom: 32px; box-shadow: 0 4px 10px rgba(26,43,76,0.15);">
+                                <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #10b981; margin-bottom: 8px;">Official Assessment Standing</div>
+                                <p style="font-size: 14px; line-height: 1.5; color: #e2e8f0; margin: 0 0 16px 0;">${escapeHtml(quizCalcData.standing)} — ${escapeHtml(quizName)}</p>
+                                <div style="background-color: rgba(255,255,255,0.12); border: 1px dashed rgba(255,255,255,0.25); border-radius: 6px; padding: 12px; text-align: center; font-family: monospace; font-size: 20px; font-weight: 700; letter-spacing: 2px; color: #ffffff;">GRADE: ${escapeHtml(quizCalcData.grade)} (${quizCalcData.percent.toFixed(1)}%)</div>
+                            </div>
+
+                            <!-- Metadata Card matching Order Code / Payment Gateway -->
+                            <table style="width: 100%; margin-bottom: 32px; background-color: #f8fafc; border-radius: 6px; border: 1px solid #edf2f7;" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="padding: 16px 20px; font-size: 14px; line-height: 1.5; color: #4a5568;" width="50%">
+                                        <div style="font-size: 12px; text-transform: uppercase; color: #718096; font-weight: 600;">Transcript ID</div>
+                                        <div style="font-weight: 500; color: #1a2b4c;">#${transcriptCode}</div>
+                                    </td>
+                                    <td style="padding: 16px 20px; font-size: 14px; line-height: 1.5; color: #4a5568;" width="50%">
+                                        <div style="font-size: 12px; text-transform: uppercase; color: #718096; font-weight: 600;">Date Completed</div>
+                                        <div style="font-weight: 500; color: #1a2b4c;">${escapeHtml(quizDate)}</div>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Assessment Line Table matching Receipt Line Items -->
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px;">
+                               <thead>
+                                    <tr>
+                                        <th style="padding: 12px 0; border-bottom: 2px solid #edf2f7; font-size: 12px; text-transform: uppercase; color: #718096; text-align: left;">Assessment Title</th>
+                                        <th style="padding: 12px 0; border-bottom: 2px solid #edf2f7; font-size: 12px; text-transform: uppercase; color: #718096; text-align: center;">Max Pts</th>
+                                        <th style="padding: 12px 0; border-bottom: 2px solid #edf2f7; font-size: 12px; text-transform: uppercase; color: #718096; text-align: right;">Earned</th>
+                                    </tr>
+                               </thead>
+                               <tbody>
+                                    <tr>
+                                        <td style="padding: 16px 0; border-bottom: 1px solid #edf2f7; font-size: 15px; color: #2d3748; vertical-align: top;">
+                                            <div style="font-weight: 600; color: #1a2b4c;">${escapeHtml(quizName)}</div>
+                                            <div style="font-size: 13px; color: #718096; margin-top: 4px;">Examinee: ${escapeHtml(studentName)} (${escapeHtml(studentEmail)})</div>
+                                        </td>
+                                        <td style="padding: 16px 0; border-bottom: 1px solid #edf2f7; font-size: 15px; color: #2d3748; vertical-align: top; text-align: center; font-weight: 500;">${quizCalcData.max}</td>
+                                        <td style="padding: 16px 0; border-bottom: 1px solid #edf2f7; font-size: 15px; color: #2d3748; vertical-align: top; text-align: right; font-weight: 500;">${quizCalcData.earned}</td>
+                                    </tr>
+                               </tbody>
+                            </table>
+
+                            <!-- Totals Summary matching Receipt Totals -->
+                            <table style="width: 100%; margin-bottom: 16px;" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="padding: 6px 0; font-size: 14px; color: #718096; text-align: right; width: 75%;">Points Earned</td>
+                                    <td style="padding: 6px 0; font-size: 14px; color: #2d3748; text-align: right; font-weight: 500;">${quizCalcData.earned} / ${quizCalcData.max}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 6px 0; font-size: 14px; color: #718096; text-align: right;">Calculated Percentage</td>
+                                    <td style="padding: 6px 0; font-size: 14px; color: #2d3748; text-align: right; font-weight: 500;">${quizCalcData.percent.toFixed(1)}%</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 16px 0; font-size: 16px; font-weight: 700; color: #1a2b4c; text-align: right; border-top: 2px solid #edf2f7;">Final Letter Grade</td>
+                                    <td style="padding: 16px 0; font-size: 22px; font-weight: 700; color: ${gradeBadgeColor}; text-align: right; border-top: 2px solid #edf2f7;">${escapeHtml(quizCalcData.grade)}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>`;
+
+            const blob = new Blob([compiledQuizHtml], { type: 'text/html' });
+            triggerFileDownload(blob, `quiz_score_${studentName.replace(/\s+/g, '_')}.html`);
+
+            successBox.innerText = `Quiz Score report (${quizCalcData.grade} — ${quizCalcData.percent.toFixed(1)}%) compiled and downloaded!`;
+            successBox.style.display = 'block';
+        }
+
+        /* ==========================================================================
+           MODULE 3: STATUS UPDATES (STATUS REQUESTS) + LIVE EDITOR + PDF & EMAIL
+           ========================================================================== */
+        let isLetterEditedManually = false;
+        let isEditModeOpen = false;
+
+        function resetStatusForm() {
+            document.getElementById('statusDecision').value = 'admitted';
+            document.getElementById('statusPersonName').value = '';
+            document.getElementById('statusPosition').value = '';
+            document.getElementById('statusAlert').style.display = 'none';
+            document.getElementById('statusSuccess').style.display = 'none';
+            isLetterEditedManually = false;
+            setEditMode(false);
+            updateDefaultLetterPreview();
+        }
+
+        function buildDefaultLetterText() {
+            const decision = document.getElementById('statusDecision').value;
+            const rawName = document.getElementById('statusPersonName').value.trim();
+            const rawPosition = document.getElementById('statusPosition').value.trim();
+
+            const personName = rawName || '[Name of Person]';
+            const positionName = rawPosition || '[Position / Application]';
+
+            const todayFormatted = new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            if (decision === 'admitted') {
+                return `${todayFormatted}\n\nDear ${personName},\n\nI am pleased to inform you that you have been admitted for your application to ${positionName}.\n\nAfter a thorough review of your qualifications, achievements, and overall candidacy, our review committee was thoroughly impressed by the dedication and excellence you demonstrated throughout the evaluation process. We believe you will make a meaningful contribution and thrive in this next chapter.\n\nPlease review the enclosed onboarding details and confirm your acceptance at your earliest convenience. Congratulations once again on this well-earned accomplishment.\n\nSincerely,\n\nAdmissions & Selection Committee\nLabelMaker Administrative Office`;
+            } else {
+                return `${todayFormatted}\n\nDear ${personName},\n\nThank you for your interest and the time you invested in applying for ${positionName}.\n\nAfter careful consideration of all applicants, I am sorry to say that you were denied for your position for the ${positionName}. Because of the exceptionally competitive pool of candidates this cycle, we were unable to extend an offer at this time.\n\nPlease know that this decision does not diminish our appreciation for your background and efforts. We sincerely wish you every success in your future endeavors.\n\nSincerely,\n\nAdmissions & Selection Committee\nLabelMaker Administrative Office`;
+            }
+        }
+
+        function handleStatusFieldChange() {
+            if (!isLetterEditedManually) {
+                updateDefaultLetterPreview();
+            }
+        }
+
+        function updateDefaultLetterPreview() {
+            const editor = document.getElementById('letterEditor');
+            editor.innerText = buildDefaultLetterText();
+        }
+
+        function markLetterManuallyEdited() {
+            isLetterEditedManually = true;
+        }
+
+        function setEditMode(enable) {
+            isEditModeOpen = enable;
+            const editor = document.getElementById('letterEditor');
+            const btn = document.getElementById('toggleEditLetterBtn');
+            const btnLabel = document.getElementById('editBtnLabel');
+            const statusText = document.getElementById('editModeStatusText');
+
+            editor.setAttribute('contenteditable', enable ? 'true' : 'false');
+
+            if (enable) {
+                btn.classList.add('editing-active');
+                btnLabel.innerText = 'Done Editing';
+                statusText.innerHTML = 'Editing active — your changes will be used in both the <strong>Email</strong> and <strong>PDF</strong>.';
+                editor.focus();
+            } else {
+                btn.classList.remove('editing-active');
+                btnLabel.innerText = 'Edit';
+                statusText.innerHTML = 'Click <strong>Edit</strong> to customize the letter text directly.';
+            }
+        }
+
+        function toggleLetterEditMode() {
+            setEditMode(!isEditModeOpen);
+        }
+
+        function resetLetterTemplate() {
+            isLetterEditedManually = false;
+            updateDefaultLetterPreview();
+        }
+
+        function handleGenerateStatusLetter() {
+            const personName = document.getElementById('statusPersonName').value.trim();
+            const positionName = document.getElementById('statusPosition').value.trim();
+            const decision = document.getElementById('statusDecision').value;
+
+            const errBox = document.getElementById('statusAlert');
+            const successBox = document.getElementById('statusSuccess');
+            errBox.style.display = 'none';
+            successBox.style.display = 'none';
+
+            if (!personName || !positionName) {
+                errBox.innerText = "Please enter both the Name of Person and the Position / Application subject.";
+                errBox.style.display = 'block';
+                return;
+            }
+
+            // Lock editing state cleanly before exporting so the exact edited text is captured
+            if (isEditModeOpen) {
+                setEditMode(false);
+            }
+
+            // Exact text from the live preview/editor box (including any custom user edits)
+            const finalLetterPlainText = document.getElementById('letterEditor').innerText.trim();
+            const safeFileSlug = personName.replace(/\s+/g, '_');
+            const statusBadgeText = decision === 'admitted' ? 'STATUS: ADMITTED' : 'STATUS: DECISION NOTICE';
+            const statusBadgeColor = decision === 'admitted' ? '#10b981' : '#ef4444';
+
+            // 1. Build matching HTML Email Letter using the exact edited letter text
+            const paragraphsHtml = finalLetterPlainText
+                .split(/\n\n+/)
+                .map(para => `<p style="font-size: 15px; line-height: 1.7; color: #2d3748; margin: 0 0 18px 0; white-space: pre-line;">${escapeHtml(para)}</p>`)
+                .join('');
+
+            const compiledStatusEmailHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Status Notification - ${escapeHtml(personName)}</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #333333; }
+    </style>
+</head>
+<body>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f8; padding: 40px 0; width: 100%; table-layout: fixed;">
+        <tr>
+            <td align="center">
+                <table width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e1e4e8; overflow: hidden;" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="background-color: #1a2b4c; padding: 32px 40px; text-align: center;">
+                            <span style="font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">LabelMaker</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px;">
+                            <table style="width: 100%; margin-bottom: 28px; background-color: #f8fafc; border-radius: 6px; border: 1px solid #edf2f7;" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="padding: 16px 20px; font-size: 14px; line-height: 1.5; color: #4a5568;" width="55%">
+                                        <div style="font-size: 11px; text-transform: uppercase; color: #718096; font-weight: 600;">Subject / Position</div>
+                                        <div style="font-weight: 600; color: #1a2b4c;">${escapeHtml(positionName)}</div>
+                                    </td>
+                                    <td style="padding: 16px 20px; font-size: 14px; line-height: 1.5; text-align: right;" width="45%">
+                                        <span style="display: inline-block; padding: 5px 10px; border-radius: 4px; background-color: ${statusBadgeColor}; color: #ffffff; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;">${statusBadgeText}</span>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <div style="border-top: 1px solid #edf2f7; padding-top: 24px;">
+                                ${paragraphsHtml}
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>`;
+
+            const emailBlob = new Blob([compiledStatusEmailHtml], { type: 'text/html' });
+            triggerFileDownload(emailBlob, `status_email_${safeFileSlug}.html`);
+
+            // 2. Generate & Download the official PDF matching the exact edited letter text
+            let pdfGenerated = false;
+            if (window.jspdf && window.jspdf.jsPDF) {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    const margin = 54;
+                    const usableWidth = pageWidth - margin * 2;
+
+                    // Top Brand Banner matching #1a2b4c header
+                    doc.setFillColor(26, 43, 76);
+                    doc.rect(0, 0, pageWidth, 74, 'F');
+
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(20);
+                    doc.text('LabelMaker', margin, 42);
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(10);
+                    doc.setTextColor(148, 163, 184);
+                    doc.text('OFFICIAL STATUS NOTIFICATION', pageWidth - margin, 42, { align: 'right' });
+
+                    // Subject metadata bar
+                    doc.setFillColor(248, 250, 252);
+                    doc.setDrawColor(225, 228, 232);
+                    doc.roundedRect(margin, 98, usableWidth, 44, 4, 4, 'FD');
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(9);
+                    doc.setTextColor(113, 128, 150);
+                    doc.text('APPLICANT:', margin + 14, 116);
+                    doc.text('POSITION / SUBJECT:', margin + 230, 116);
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(11);
+                    doc.setTextColor(26, 43, 76);
+                    doc.text(personName, margin + 14, 131);
+                    doc.text(positionName, margin + 230, 131);
+
+                    // Body Text (exact edited letter)
+                    doc.setFont('times', 'normal');
+                    doc.setFontSize(12);
+                    doc.setTextColor(45, 55, 72);
+
+                    const wrappedLines = doc.splitTextToSize(finalLetterPlainText, usableWidth);
+                    let cursorY = 178;
+                    const lineHeight = 18;
+
+                    wrappedLines.forEach(line => {
+                        if (cursorY > pageHeight - margin) {
+                            doc.addPage();
+                            cursorY = margin;
+                        }
+                        doc.text(line, margin, cursorY);
+                        cursorY += lineHeight;
+                    });
+
+                    // Footer divider
+                    doc.setDrawColor(225, 228, 232);
+                    doc.line(margin, pageHeight - 48, pageWidth - margin, pageHeight - 48);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(9);
+                    doc.setTextColor(113, 128, 150);
+                    doc.text('Generated via LabelMaker Administrative Console', margin, pageHeight - 32);
+
+                    doc.save(`status_letter_${safeFileSlug}.pdf`);
+                    pdfGenerated = true;
+                } catch (e) {
+                    console.error('PDF generation error:', e);
+                }
+            }
+
+            if (pdfGenerated) {
+                successBox.innerText = `Success! Both the PDF letter (status_letter_${safeFileSlug}.pdf) and matching HTML email (status_email_${safeFileSlug}.html) have been downloaded.`;
+            } else {
+                successBox.innerText = `HTML email letter downloaded! (PDF library unavailable offline—please check your connection for PDF export.)`;
+            }
+            successBox.style.display = 'block';
+        }
+    </script>
 </body>
 </html>
